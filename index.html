@@ -4,23 +4,238 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мій Розклад</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --accent: #6c5ce7;
+            --text-dark: #2d3436;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* Кнопки головного меню */
+        .menu-btn {
+            background: var(--card-bg);
+            border: none;
+            padding: 20px;
+            width: 100%;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Контейнер для контенту (модальне вікно) */
+        #schedule-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 100;
+        }
+
+        .schedule-sheet {
+            background: white;
+            width: 100%;
+            max-height: 90vh;
+            border-radius: 30px 30px 0 0;
+            padding: 30px 20px;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .schedule-sheet.active {
+            transform: translateY(0);
+        }
+
+        .close-btn {
+            background: #eee;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Стилізація розкладу */
+        .day-block {
+            margin-bottom: 25px;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .day-title {
+            font-size: 20px;
+            color: var(--accent);
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lesson {
+            padding: 10px 0;
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid #fafafa;
+        }
+
+        .lesson-num {
+            color: #b2bec3;
+            font-weight: bold;
+            min-width: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
+
     <div class="app-container">
-        <header class="app-header">
-            <h1>Мій Розклад Уроків</h1>
-        </header>
-        <main class="app-main">
-            <div class="menu-buttons">
-                <button id="tomorrowScheduleBtn" class="menu-button">Розклад на завтра</button>
-                <button id="fullScheduleBtn" class="menu-button">Повний розклад</button>
-            </div>
-            <div id="scheduleDisplay" class="schedule-display">
-                <!-- Сюди буде завантажуватися розклад -->
-            </div>
-        </main>
+        <h1>Мій Навчальний День</h1>
+        
+        <button class="menu-btn" onclick="showTomorrow()">
+            📅 Розклад на завтра
+        </button>
+        
+        <button class="menu-btn" onclick="showFull()">
+            📚 Повний розклад
+        </button>
     </div>
-    <script src="script.js"></script>
+
+    <div id="schedule-overlay" onclick="closeSchedule(event)">
+        <div class="schedule-sheet" id="sheet" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeSchedule()">✕</button>
+            <div id="schedule-content">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const scheduleData = {
+            1: { name: "Понеділок", icon: "✅", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
+            2: { name: "Вівторок", icon: "✅", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
+            3: { name: "Середа", icon: "✅", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
+            4: { name: "Четвер", icon: "✅", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
+            5: { name: "П'ятниця", icon: "✅", lessons: ["Основи здоров'я", "Основи здоров’я", "Математика", "Природа", "Історія", "Математика"] }
+        };
+
+        function renderDay(dayId) {
+            const day = scheduleData[dayId];
+            if (!day) return '';
+            
+            let html = `<div class="day-block">
+                <div class="day-title">${day.icon} ${day.name}</div>`;
+            
+            day.lessons.forEach((lesson, index) => {
+                html += `
+                    <div class="lesson">
+                        <span class="lesson-num">${index + 1}.</span>
+                        <span class="lesson-name">${lesson}</span>
+                    </div>`;
+            });
+            
+            html += `</div>`;
+            return html;
+        }
+
+        function openSheet(content) {
+            document.getElementById('schedule-content').innerHTML = content;
+            const overlay = document.getElementById('schedule-overlay');
+            const sheet = document.getElementById('sheet');
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                sheet.classList.add('active');
+            }, 10);
+        }
+
+        function closeSchedule() {
+            const sheet = document.getElementById('sheet');
+            sheet.classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('schedule-overlay').style.display = 'none';
+            }, 500);
+        }
+
+        function showFull() {
+            let fullHtml = '<h2>Повний розклад</h2><br>';
+            for(let i = 1; i <= 5; i++) {
+                fullHtml += renderDay(i);
+            }
+            openSheet(fullHtml);
+        }
+
+        function showTomorrow() {
+            const now = new Date();
+            let today = now.getDay(); // 0 - Sun, 1 - Mon ... 6 - Sat
+            let tomorrow;
+
+            // Логіка: якщо Пт(5), Сб(6) або Нд(0) -> показуємо Понеділок(1)
+            if (today >= 5 || today === 0) {
+                tomorrow = 1;
+            } else {
+                tomorrow = today + 1;
+            }
+
+            let title = tomorrow === 1 && today !== 0 ? "<h2>На понеділок</h2><br>" : "<h2>Розклад на завтра</h2><br>";
+            openSheet(title + renderDay(tomorrow));
+        }
+    </script>
 </body>
 </html>
