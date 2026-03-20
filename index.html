@@ -3,21 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мій Розклад</title>
+    <title>Мій Розклад Pro</title>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --card-bg: rgba(255, 255, 255, 0.95);
             --accent: #6c5ce7;
             --text-dark: #2d3436;
+            --secondary: #a29bfe;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
 
         body {
             background: var(--bg-gradient);
@@ -26,56 +22,38 @@
             justify-content: center;
             align-items: center;
             color: var(--text-dark);
-            overflow-x: hidden;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
+        .app-container { width: 100%; max-width: 400px; padding: 20px; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; font-weight: 300; }
 
-        h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 300;
-            letter-spacing: 1px;
-        }
-
-        /* Кнопки головного меню */
         .menu-btn {
             background: var(--card-bg);
             border: none;
-            padding: 20px;
+            padding: 18px;
             width: 100%;
             border-radius: 20px;
             margin-bottom: 15px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--accent);
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
 
-        .menu-btn:active {
-            transform: scale(0.95);
-        }
+        .menu-btn:active { transform: scale(0.95); }
+        .btn-bell { background: #ffeaa7; color: #d35400; }
 
-        /* Контейнер для контенту (модальне вікно) */
         #schedule-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
             display: none;
             justify-content: center;
             align-items: flex-end;
@@ -87,60 +65,68 @@
             width: 100%;
             max-height: 90vh;
             border-radius: 30px 30px 0 0;
-            padding: 30px 20px;
+            padding: 25px;
             overflow-y: auto;
             transform: translateY(100%);
-            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: 0.4s ease-out;
         }
 
-        .schedule-sheet.active {
-            transform: translateY(0);
-        }
+        .schedule-sheet.active { transform: translateY(0); }
 
         .close-btn {
-            background: #eee;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            float: right;
-            cursor: pointer;
-            font-size: 20px;
+            background: #eee; border: none; width: 35px; height: 35px;
+            border-radius: 50%; float: right; cursor: pointer;
         }
 
-        /* Стилізація розкладу */
-        .day-block {
-            margin-bottom: 25px;
-            animation: fadeIn 0.5s ease forwards;
-        }
-
+        .day-block { margin-bottom: 25px; }
         .day-title {
-            font-size: 20px;
-            color: var(--accent);
+            font-size: 20px; color: var(--accent);
             border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 12px; padding-bottom: 5px;
         }
 
         .lesson {
-            padding: 10px 0;
-            display: flex;
-            gap: 15px;
-            border-bottom: 1px solid #fafafa;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f1f1;
         }
 
-        .lesson-num {
-            color: #b2bec3;
-            font-weight: bold;
-            min-width: 20px;
+        .lesson-info { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+        .lesson-num { color: #b2bec3; font-size: 14px; }
+
+        /* Стилі для ДЗ */
+        .hw-container {
+            margin-top: 5px;
+            padding-left: 25px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .hw-text {
+            font-size: 13px;
+            color: #636e72;
+            font-style: italic;
+            display: block;
+        }
+
+        .hw-input {
+            width: 100%;
+            border: 1px dashed var(--secondary);
+            border-radius: 5px;
+            padding: 5px;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none; /* Сховано за замовчуванням */
+        }
+
+        .admin-mode .hw-input { display: block; }
+        .admin-mode .hw-text { display: none; }
+
+        .admin-toggle {
+            font-size: 12px;
+            color: white;
+            text-decoration: underline;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+            opacity: 0.7;
         }
     </style>
 </head>
@@ -149,6 +135,10 @@
     <div class="app-container">
         <h1>Мій Навчальний День</h1>
         
+        <button class="menu-btn btn-bell" onclick="checkBell()">
+            🔔 Скільки до дзвінка?
+        </button>
+
         <button class="menu-btn" onclick="showTomorrow()">
             📅 Розклад на завтра
         </button>
@@ -156,17 +146,29 @@
         <button class="menu-btn" onclick="showFull()">
             📚 Повний розклад
         </button>
+
+        <div class="admin-toggle" onclick="toggleAdmin()">Режим редагування (для старости)</div>
     </div>
 
-    <div id="schedule-overlay" onclick="closeSchedule(event)">
+    <div id="schedule-overlay" onclick="closeSchedule()">
         <div class="schedule-sheet" id="sheet" onclick="event.stopPropagation()">
             <button class="close-btn" onclick="closeSchedule()">✕</button>
-            <div id="schedule-content">
-                </div>
+            <div id="schedule-content"></div>
         </div>
     </div>
 
     <script>
+        // Розклад дзвінків (5-9 класи)
+        const bellSchedule = [
+            { start: "08:30", end: "09:15" }, // 1 урок
+            { start: "09:25", end: "10:10" }, // 2 урок
+            { start: "10:25", end: "11:10" }, // 3 урок
+            { start: "11:30", end: "12:15" }, // 4 урок
+            { start: "12:25", end: "13:10" }, // 5 урок
+            { start: "13:20", end: "14:05" }, // 6 урок
+            { start: "14:15", end: "15:00" }  // 7 урок
+        ];
+
         const scheduleData = {
             1: { name: "Понеділок", icon: "✅", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
             2: { name: "Вівторок", icon: "✅", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
@@ -175,18 +177,75 @@
             5: { name: "П'ятниця", icon: "✅", lessons: ["Основи здоров'я", "Основи здоров’я", "Математика", "Природа", "Історія", "Математика"] }
         };
 
+        let isAdmin = false;
+
+        function toggleAdmin() {
+            const pass = prompt("Введіть пароль для редагування:");
+            if (pass === "1234") { // Твій секретний пароль
+                isAdmin = !isAdmin;
+                alert(isAdmin ? "Режим редактора увімкнено!" : "Режим редактора вимкнено.");
+            } else {
+                alert("Невірний пароль!");
+            }
+        }
+
+        function checkBell() {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            
+            let message = "Уроки ще не почалися або вже закінчилися 😴";
+
+            for (let i = 0; i < bellSchedule.length; i++) {
+                const start = bellSchedule[i].start.split(':').map(Number);
+                const end = bellSchedule[i].end.split(':').map(Number);
+                const startMin = start[0] * 60 + start[1];
+                const endMin = end[0] * 60 + end[1];
+
+                if (currentTime >= startMin && currentTime < endMin) {
+                    message = `Зараз ${i+1}-й урок. \nДо кінця: ${endMin - currentTime} хв. ⏳`;
+                    break;
+                } else if (i < bellSchedule.length - 1) {
+                    const nextStart = bellSchedule[i+1].start.split(':').map(Number);
+                    const nextStartMin = nextStart[0] * 60 + nextStart[1];
+                    if (currentTime >= endMin && currentTime < nextStartMin) {
+                        message = `Зараз перерва! 🍎 \nДо ${i+2}-го уроку: ${nextStartMin - currentTime} хв.`;
+                        break;
+                    }
+                }
+            }
+            alert(message);
+        }
+
+        function getHW(subject) {
+            return localStorage.getItem('hw_' + subject) || "ДЗ не записано";
+        }
+
+        function saveHW(subject, value) {
+            localStorage.setItem('hw_' + subject, value);
+        }
+
         function renderDay(dayId) {
             const day = scheduleData[dayId];
             if (!day) return '';
             
-            let html = `<div class="day-block">
+            let html = `<div class="day-block ${isAdmin ? 'admin-mode' : ''}">
                 <div class="day-title">${day.icon} ${day.name}</div>`;
             
             day.lessons.forEach((lesson, index) => {
+                const currentHW = getHW(lesson);
                 html += `
                     <div class="lesson">
-                        <span class="lesson-num">${index + 1}.</span>
-                        <span class="lesson-name">${lesson}</span>
+                        <div class="lesson-info">
+                            <span class="lesson-num">${index + 1}.</span>
+                            <span class="lesson-name">${lesson}</span>
+                        </div>
+                        <div class="hw-container">
+                            <span class="hw-text">📝 ${currentHW}</span>
+                            <input type="text" class="hw-input" 
+                                   placeholder="Впишіть ДЗ..." 
+                                   value="${currentHW === 'ДЗ не записано' ? '' : currentHW}"
+                                   onchange="saveHW('${lesson}', this.value)">
+                        </div>
                     </div>`;
             });
             
@@ -198,42 +257,27 @@
             document.getElementById('schedule-content').innerHTML = content;
             const overlay = document.getElementById('schedule-overlay');
             const sheet = document.getElementById('sheet');
-            
             overlay.style.display = 'flex';
-            setTimeout(() => {
-                sheet.classList.add('active');
-            }, 10);
+            setTimeout(() => sheet.classList.add('active'), 10);
         }
 
         function closeSchedule() {
             const sheet = document.getElementById('sheet');
             sheet.classList.remove('active');
-            setTimeout(() => {
-                document.getElementById('schedule-overlay').style.display = 'none';
-            }, 500);
+            setTimeout(() => { document.getElementById('schedule-overlay').style.display = 'none'; }, 400);
         }
 
         function showFull() {
             let fullHtml = '<h2>Повний розклад</h2><br>';
-            for(let i = 1; i <= 5; i++) {
-                fullHtml += renderDay(i);
-            }
+            for(let i = 1; i <= 5; i++) fullHtml += renderDay(i);
             openSheet(fullHtml);
         }
 
         function showTomorrow() {
             const now = new Date();
-            let today = now.getDay(); // 0 - Sun, 1 - Mon ... 6 - Sat
-            let tomorrow;
-
-            // Логіка: якщо Пт(5), Сб(6) або Нд(0) -> показуємо Понеділок(1)
-            if (today >= 5 || today === 0) {
-                tomorrow = 1;
-            } else {
-                tomorrow = today + 1;
-            }
-
-            let title = tomorrow === 1 && today !== 0 ? "<h2>На понеділок</h2><br>" : "<h2>Розклад на завтра</h2><br>";
+            let today = now.getDay();
+            let tomorrow = (today >= 5 || today === 0) ? 1 : today + 1;
+            let title = tomorrow === 1 ? "<h2>На понеділок</h2><br>" : "<h2>На завтра</h2><br>";
             openSheet(title + renderDay(tomorrow));
         }
     </script>
