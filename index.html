@@ -3,254 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мій Розклад Pro</title>
+    <title>School OS Pro</title>
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --accent: #6c5ce7;
-            --text-dark: #2d3436;
-            --secondary: #a29bfe;
+            --win-bg: #2c3e50;
+            --win-accent: #0078d7; /* Windows Blue */
+            --taskbar-bg: rgba(0, 0, 0, 0.85);
+            --text-light: #ffffff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
         body {
-            background: var(--bg-gradient);
-            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-dark);
             overflow: hidden;
         }
 
-        .app-container { 
-            width: 100%; 
-            max-width: 400px; 
-            padding: 20px; 
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Клас для зсуву всіх кнопок вправо */
-        .app-container.shifted {
-            transform: translateX(120%);
-        }
-
-        h1 { color: white; text-align: center; margin-bottom: 30px; font-weight: 300; }
-
-        .menu-btn {
-            background: var(--card-bg);
-            border: none;
-            padding: 18px;
-            width: 100%;
-            border-radius: 20px;
-            margin-bottom: 15px;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--accent);
-            cursor: pointer;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-            transition: 0.3s;
+        /* Бічна панель завдань (як у Win 10 збоку) */
+        .taskbar {
+            width: 60px;
+            background: var(--taskbar-bg);
+            backdrop-filter: blur(10px);
+            height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
+            padding: 15px 0;
+            gap: 20px;
+            z-index: 1000;
+            transition: transform 0.5s ease;
+            border-right: 1px solid rgba(255,255,255,0.1);
         }
 
-        .menu-btn:active { transform: scale(0.95); }
-        .btn-bell { background: #ffeaa7; color: #d35400; }
+        /* Коли вікно відкрите, панель може трохи зміститися або стиснутися */
+        body.window-open .taskbar {
+            transform: translateX(-10px);
+        }
 
-        #schedule-overlay {
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 20px;
+            position: relative;
+        }
+
+        .task-icon:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .task-icon.active {
+            background: rgba(255,255,255,0.2);
+            border-left: 3px solid var(--win-accent);
+        }
+
+        /* Вікна додатків */
+        .window-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(12px);
+            top: 0; left: 60px; bottom: 0; right: 0;
+            background: rgba(0,0,0,0.3);
             display: none;
-            justify-content: center;
-            align-items: flex-end;
-            z-index: 100;
+            justify-content: flex-start;
+            align-items: stretch;
+            z-index: 500;
         }
 
-        .schedule-sheet {
-            background: white;
-            width: 100%;
-            max-width: 500px;
-            max-height: 85vh;
-            border-radius: 30px 30px 0 0;
-            padding: 25px;
+        .window-content {
+            width: 400px;
+            background: #f2f2f2;
+            height: 100%;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            transform: translateX(-100%);
+            transition: 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .window-content.active { transform: translateX(0); }
+
+        .window-header {
+            padding: 20px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .window-body {
+            flex: 1;
             overflow-y: auto;
-            transform: translateY(100%);
-            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            padding: 20px;
         }
 
-        .schedule-sheet.active { transform: translateY(0); }
-
-        .close-btn {
-            background: #eee; border: none; width: 35px; height: 35px;
-            border-radius: 50%; float: right; cursor: pointer; font-size: 18px;
+        /* Стилі уроків */
+        .lesson-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 4px solid var(--win-accent);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .day-block { margin-bottom: 25px; }
-        .day-title { font-size: 20px; color: var(--accent); border-bottom: 2px solid #f0f0f0; margin-bottom: 12px; }
-        
-        .lesson { padding: 12px 0; border-bottom: 1px solid #f1f1f1; }
-        .hw-text { font-size: 13px; color: #636e72; font-style: italic; display: block; margin-top: 5px; }
-        
+        .hw-area {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #555;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
         .hw-input {
-            width: 100%; border: 1px dashed var(--secondary); border-radius: 8px;
-            padding: 8px; font-size: 13px; margin-top: 8px; display: none;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+            font-size: 13px;
+            border-radius: 2px;
         }
 
-        .timer-time { font-size: 50px; font-weight: bold; color: var(--accent); margin: 15px 0; text-align: center; }
-        
-        .admin-login {
-            position: fixed; bottom: 10px; left: 10px; color: white; 
-            font-size: 10px; opacity: 0.3; cursor: pointer;
+        .timer-big {
+            font-size: 60px;
+            text-align: center;
+            font-weight: 200;
+            color: var(--win-accent);
+            margin: 40px 0;
         }
+
+        .close-btn { cursor: pointer; font-size: 20px; opacity: 0.5; }
+        .close-btn:hover { opacity: 1; color: red; }
+
+        .admin-btn { margin-top: auto; opacity: 0.5; font-size: 12px; }
+
     </style>
 </head>
-<body>
+<body id="main-body">
 
-    <div class="app-container" id="main-menu">
-        <h1>Мій Розклад</h1>
+    <div class="taskbar">
+        <div class="task-icon" title="Скільки до дзвінка" onclick="openApp('timer')">🔔</div>
+        <div class="task-icon" title="На завтра" onclick="openApp('tomorrow')">📅</div>
+        <div class="task-icon" title="Весь розклад" onclick="openApp('full')">📚</div>
         
-        <button class="menu-btn btn-bell" onclick="openBellTimer()">
-            🔔 Скільки до дзвінка?
-        </button>
-
-        <button class="menu-btn" onclick="showTomorrow()">
-            📅 Розклад на завтра
-        </button>
-        
-        <button class="menu-btn" onclick="showFull()">
-            📚 Повний розклад
-        </button>
+        <div class="task-icon admin-btn" title="Вхід" onclick="login()">🔑</div>
     </div>
 
-    <div id="schedule-overlay" onclick="closeSchedule()">
-        <div class="schedule-sheet" id="sheet" onclick="event.stopPropagation()">
-            <button class="close-btn" onclick="closeSchedule()">✕</button>
-            <div id="schedule-content"></div>
+    <div class="window-overlay" id="overlay" onclick="closeApp()">
+        <div class="window-content" id="win" onclick="event.stopPropagation()">
+            <div class="window-header">
+                <h2 id="win-title">Додаток</h2>
+                <span class="close-btn" onclick="closeApp()">✕</span>
+            </div>
+            <div class="window-body" id="win-body">
+                </div>
         </div>
     </div>
 
-    <div class="admin-login" onclick="loginAdmin()">Admin Login</div>
-
     <script>
-        const bellSchedule = [
-            { start: "08:30", end: "09:15" }, { start: "09:25", end: "10:10" },
-            { start: "10:25", end: "11:10" }, { start: "11:30", end: "12:15" },
-            { start: "12:25", end: "13:10" }, { start: "13:20", end: "14:05" },
-            { start: "14:15", end: "15:00" }
-        ];
+        const ADMIN_EMAIL = "br.m.airways@gmail.com";
+        let isAdmin = false;
 
-        const scheduleData = {
-            1: { name: "Понеділок", icon: "🚀", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
-            2: { name: "Вівторок", icon: "⚡", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
-            3: { name: "Середа", icon: "💎", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
-            4: { name: "Четвер", icon: "🌟", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
-            5: { name: "П'ятниця", icon: "🎉", lessons: ["Основи здоров'я", "Основи здоров’я", "Математика", "Природа", "Історія", "Математика"] }
+        const schedule = {
+            1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
+            2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
+            3: { name: "Середа", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
+            4: { name: "Четвер", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
+            5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Основи здоров’я", "Математика", "Природа", "Історія", "Математика"] }
         };
 
-        let isAdmin = false;
-        const ADMIN_EMAIL = "br.m.airways@gmail.com"; // ЗМІНІТЬ НА ВЛАСНУ ПОШТУ
+        const bells = [
+            {s: "08:30", e: "09:15"}, {s: "09:25", e: "10:10"},
+            {s: "10:25", e: "11:10"}, {s: "11:30", e: "12:15"},
+            {s: "12:25", e: "13:10"}, {s: "13:20", e: "14:05"},
+            {s: "14:15", e: "15:00"}
+        ];
 
-        function loginAdmin() {
-            const email = prompt("Введіть email для доступу:");
-            if (email === ADMIN_EMAIL) {
+        function login() {
+            const mail = prompt("Введіть email адміністратора:");
+            if(mail === ADMIN_EMAIL) {
                 isAdmin = true;
-                alert("Доступ дозволено! Тепер ви можете редагувати ДЗ.");
+                alert("Ви увійшли як староста! Редагування доступне.");
+                closeApp(); // Оновити вікно якщо було відкрите
             } else {
-                alert("Доступ заборонено.");
+                alert("Помилка доступу.");
             }
         }
 
-        // --- ТАЙМЕР ---
-        let timerInterval;
-        function updateTimer() {
-            const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            const sec = now.getSeconds();
-            let found = false;
-
-            for (let i = 0; i < bellSchedule.length; i++) {
-                const s = bellSchedule[i].start.split(':').map(Number);
-                const e = bellSchedule[i].end.split(':').map(Number);
-                const sMin = s[0] * 60 + s[1];
-                const eMin = e[0] * 60 + e[1];
-
-                if (currentTime >= sMin && currentTime < eMin) {
-                    const remMin = eMin - currentTime - 1;
-                    const remSec = 60 - sec;
-                    document.getElementById('timer-val').innerText = `${remMin}:${remSec < 10 ? '0'+remSec : remSec}`;
-                    found = true; break;
-                } else if (i < bellSchedule.length - 1) {
-                    const nextS = bellSchedule[i+1].start.split(':').map(Number);
-                    const nextSMin = nextS[0] * 60 + nextS[1];
-                    if (currentTime >= eMin && currentTime < nextSMin) {
-                        const remMin = nextSMin - currentTime - 1;
-                        const remSec = 60 - sec;
-                        document.getElementById('timer-val').innerText = `${remMin}:${remSec < 10 ? '0'+remSec : remSec}`;
-                        document.getElementById('timer-status').innerText = "До кінця перерви";
-                        found = true; break;
-                    }
-                }
-            }
-            if(!found) document.getElementById('schedule-content').innerHTML = "<h3>Уроки закінчились! 😴</h3>";
-        }
-
-        function openBellTimer() {
-            openSheet(`<h3>Час до дзвінка</h3><div id="timer-status" style="text-align:center; color:#636e72;">До кінця уроку</div><div class="timer-time" id="timer-val">00:00</div>`);
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-
-        // --- УПРАВЛІННЯ ІНТЕРФЕЙСОМ ---
-        function openSheet(content) {
-            document.getElementById('schedule-content').innerHTML = content;
-            document.getElementById('main-menu').classList.add('shifted'); // Зсуваємо кнопки
-            const overlay = document.getElementById('schedule-overlay');
-            const sheet = document.getElementById('sheet');
+        function openApp(app) {
+            const overlay = document.getElementById('overlay');
+            const win = document.getElementById('win');
+            const body = document.getElementById('win-body');
+            const title = document.getElementById('win-title');
+            
             overlay.style.display = 'flex';
-            setTimeout(() => sheet.classList.add('active'), 50);
+            setTimeout(() => win.classList.add('active'), 10);
+            document.getElementById('main-body').classList.add('window-open');
+
+            if(app === 'timer') {
+                title.innerText = "Таймер дзвінків";
+                startTimer();
+            } else if(app === 'tomorrow') {
+                title.innerText = "Розклад на завтра";
+                const d = new Date().getDay();
+                const next = (d >= 5 || d === 0) ? 1 : d + 1;
+                body.innerHTML = renderDay(next);
+            } else if(app === 'full') {
+                title.innerText = "Повний тиждень";
+                let h = "";
+                for(let i=1; i<=5; i++) h += renderDay(i);
+                body.innerHTML = h;
+            }
         }
 
-        function closeSchedule() {
-            clearInterval(timerInterval);
-            document.getElementById('main-menu').classList.remove('shifted'); // Повертаємо кнопки
-            const sheet = document.getElementById('sheet');
-            sheet.classList.remove('active');
-            setTimeout(() => { document.getElementById('schedule-overlay').style.display = 'none'; }, 400);
+        function closeApp() {
+            clearInterval(timerTick);
+            document.getElementById('win').classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('overlay').style.display = 'none';
+                document.getElementById('main-body').classList.remove('window-open');
+            }, 400);
         }
 
-        function renderDay(dayId) {
-            const day = scheduleData[dayId];
-            let html = `<div class="day-block"><div class="day-title">${day.icon} ${day.name}</div>`;
-            day.lessons.forEach((lesson, index) => {
-                const hw = localStorage.getItem('hw_' + lesson) || "ДЗ не вказано";
+        function renderDay(id) {
+            const data = schedule[id];
+            let html = `<h3>${data.name}</h3><br>`;
+            data.lessons.forEach((l, i) => {
+                const hw = localStorage.getItem('hw_'+l) || "Немає завдань";
                 html += `
-                    <div class="lesson">
-                        <strong>${index + 1}. ${lesson}</strong>
-                        <span class="hw-text">📝 ${hw}</span>
-                        <input type="text" class="hw-input" style="${isAdmin ? 'display:block' : ''}" 
-                               placeholder="Змінити ДЗ..." onchange="localStorage.setItem('hw_${lesson}', this.value)" value="${hw === 'ДЗ не вказано' ? '' : hw}">
-                    </div>`;
+                <div class="lesson-card">
+                    <div><strong>${i+1}. ${l}</strong></div>
+                    <div class="hw-area">
+                        ${isAdmin 
+                          ? `<input class="hw-input" value="${hw === 'Немає завдань' ? '' : hw}" placeholder="Введіть ДЗ..." onchange="localStorage.setItem('hw_${l}', this.value)">`
+                          : `<span>📝 ${hw}</span>`
+                        }
+                    </div>
+                </div>`;
             });
-            return html + `</div>`;
+            return html + "<hr style='margin:20px 0; opacity:0.2'>";
         }
 
-        function showFull() {
-            let h = '<h2>Повний розклад</h2><br>';
-            for(let i=1; i<=5; i++) h += renderDay(i);
-            openSheet(h);
-        }
+        let timerTick;
+        function startTimer() {
+            const body = document.getElementById('win-body');
+            body.innerHTML = `<div class="timer-big" id="t-val">00:00</div><p id="t-status" style="text-align:center"></p>`;
+            
+            timerTick = setInterval(() => {
+                const now = new Date();
+                const cur = now.getHours() * 60 + now.getMinutes();
+                const sec = 60 - now.getSeconds();
+                let found = false;
 
-        function showTomorrow() {
-            const d = new Date().getDay();
-            const tomorrow = (d >= 5 || d === 0) ? 1 : d + 1;
-            openSheet(renderDay(tomorrow));
+                bells.forEach((b, i) => {
+                    const s = b.s.split(':').map(Number);
+                    const e = b.e.split(':').map(Number);
+                    const sm = s[0]*60 + s[1];
+                    const em = e[0]*60 + e[1];
+
+                    if(cur >= sm && cur < em) {
+                        document.getElementById('t-val').innerText = `${em - cur - 1}:${sec < 10 ? '0'+sec : sec}`;
+                        document.getElementById('t-status').innerText = `Зараз ${i+1} урок`;
+                        found = true;
+                    }
+                });
+                if(!found) {
+                    document.getElementById('t-val').innerText = "--:--";
+                    document.getElementById('t-status').innerText = "Уроки закінчено";
+                }
+            }, 1000);
         }
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
