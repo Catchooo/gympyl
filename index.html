@@ -3,21 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Пилиповицька Гімназія | Платформа</title>
+    <title>Пилиповицька Гімназія</title>
+    
     <style>
         :root {
             --win-bg: #2c3e50;
             --win-accent: #6c5ce7;
-            --taskbar-bg: rgba(0, 0, 0, 0.9);
+            --taskbar-bg: rgba(15, 15, 15, 0.95);
             --text-light: #ffffff;
-            --main-font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --color-passed: #95a5a6; 
-            --color-future: #2ecc71; 
+            --main-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --color-passed: #b2bec3; 
+            --color-future: #55efc4; 
             --ai-bubble: #ffffff;
             --user-bubble: #6c5ce7;
+            --window-bg: #f0f2f5;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--main-font); }
+        /* Глобальні стилі */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: var(--main-font); 
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
@@ -25,256 +34,352 @@
             display: flex;
             overflow: hidden;
             position: relative;
+            color: #2d3436;
         }
 
-        /* Taskbar */
+        /* Панель задач (Taskbar) */
         .taskbar {
-            width: 70px;
+            width: 75px;
             background: var(--taskbar-bg);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 0;
-            gap: 25px;
+            padding: 25px 0;
+            gap: 20px;
             z-index: 1000;
             border-right: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
         }
 
         .task-icon {
-            width: 50px;
-            height: 50px;
+            width: 52px;
+            height: 52px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            font-size: 26px;
+            font-size: 24px;
             color: white;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.05);
         }
 
         .task-icon:hover {
             background: rgba(255,255,255,0.15);
-            transform: scale(1.1);
+            transform: scale(1.1) translateY(-2px);
         }
 
         .task-icon.active {
             background: var(--win-accent);
-            box-shadow: 0 0 15px var(--win-accent);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.5);
+            transform: scale(1.05);
         }
 
-        /* Desktop */
+        /* Робочий стіл */
         .desktop-greeting {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 45%;
+            left: 55%;
             transform: translate(-50%, -50%);
             text-align: center;
             color: white;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            z-index: 10;
-            width: 90%;
-            transition: 0.5s;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 5;
+            width: 80%;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
         }
-        body.window-open .desktop-greeting { opacity: 0; transform: translate(-50%, -60%); }
+
+        body.window-open .desktop-greeting {
+            opacity: 0;
+            transform: translate(-50%, -70%) scale(0.9);
+            filter: blur(10px);
+        }
+
+        .desktop-greeting h1 {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: -2px;
+        }
 
         .signature {
             position: absolute;
-            bottom: 20px;
-            right: 25px;
-            color: rgba(255, 255, 255, 0.5);
+            bottom: 25px;
+            right: 30px;
+            color: rgba(255, 255, 255, 0.4);
             font-size: 14px;
-            letter-spacing: 1px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
-        /* Windows System */
+        /* Система Вікон */
         .window-overlay {
             position: fixed;
             top: 0;
-            left: 70px;
+            left: 75px;
             bottom: 0;
             right: 0;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.2);
             display: none;
             z-index: 500;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
         }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .window-content {
             width: 100%;
-            max-width: 450px;
-            background: #f4f4f9;
+            max-width: 480px;
+            background: var(--window-bg);
             height: 100%;
             transform: translateX(-100%);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+            box-shadow: 20px 0 50px rgba(0,0,0,0.3);
+            border-right: 1px solid rgba(0,0,0,0.05);
         }
 
-        .window-content.active { transform: translateX(0); }
+        .window-content.active {
+            transform: translateX(0);
+        }
 
         .window-header {
-            padding: 20px 25px;
+            padding: 25px 30px;
             background: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e1e4e8;
         }
+
+        .window-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e272e;
+        }
+
+        .close-btn {
+            font-size: 32px;
+            color: #b2bec3;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover { color: #eb4d4b; }
 
         .window-body {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 25px;
+            scroll-behavior: smooth;
         }
 
-        /* Lessons Card */
+        /* Картки уроків */
         .lesson-card {
-            background: white;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            border-left: 6px solid #ddd;
-            transition: 0.2s;
+            background: #ffffff;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border-left: 8px solid #dfe6e9;
+            transition: all 0.3s ease;
         }
 
         .lesson-future { border-left-color: var(--color-future); }
-        .lesson-passed { border-left-color: var(--color-passed); opacity: 0.7; }
+        .lesson-passed { border-left-color: var(--color-passed); opacity: 0.6; }
         .lesson-current { 
             border-left-color: var(--win-accent); 
-            transform: scale(1.02); 
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.2);
+            transform: scale(1.03); 
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.15);
+            background: #fff;
         }
+
+        .lesson-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .lesson-name { font-weight: 700; font-size: 16px; color: #2d3436; }
+        .lesson-time { font-size: 13px; color: #636e72; font-weight: 600; }
         
-        .timer-big {
-            font-size: 42px;
+        .homework-box {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #485460;
+            border: 1px dashed #dcdde1;
+        }
+
+        /* Таймер */
+        .timer-display {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
             text-align: center;
-            font-weight: 800;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .timer-big {
+            font-size: 56px;
+            font-weight: 900;
             color: var(--win-accent);
-            margin: 20px 0;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 10px;
             font-variant-numeric: tabular-nums;
         }
 
-        /* AI Chat */
-        .chat-container { display: flex; flex-direction: column; height: 100%; }
-        .chat-messages { 
-            flex: 1; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            padding: 10px;
+        .timer-status {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #7f8c8d;
+            font-weight: 700;
         }
 
-        .msg {
+        /* AI Chat Interface */
+        .chat-wrap { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bubble {
             max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 18px;
+            padding: 14px 18px;
+            border-radius: 20px;
             font-size: 14.5px;
-            line-height: 1.5;
-            animation: msgFade 0.3s ease;
-            position: relative;
-            white-space: pre-wrap;
+            line-height: 1.6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            animation: bubbleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes msgFade { from { opacity: 0; transform: translateY(10px); } }
+        @keyframes bubbleUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .msg.ai {
+        .bubble.ai {
             align-self: flex-start;
-            background: var(--ai-bubble);
-            color: #2d3436;
+            background: white;
+            color: #1e272e;
             border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .msg.user {
+        .bubble.user {
             align-self: flex-end;
-            background: var(--user-bubble);
+            background: var(--win-accent);
             color: white;
             border-bottom-right-radius: 4px;
         }
 
-        .chat-input-area {
-            padding: 15px;
+        .chat-controls {
+            padding: 20px;
             background: white;
-            border-top: 1px solid #eee;
+            border-top: 1px solid #e1e4e8;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            align-items: center;
         }
 
         .chat-input {
             flex: 1;
-            border: 1px solid #ddd;
+            background: #f1f2f6;
+            border: 1px solid #dcdde1;
+            padding: 12px 20px;
             border-radius: 25px;
-            padding: 10px 18px;
             outline: none;
-            background: #f8f9fa;
+            font-size: 15px;
+            transition: all 0.2s;
         }
+
+        .chat-input:focus { border-color: var(--win-accent); background: #fff; }
 
         .send-btn {
             background: var(--win-accent);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
+            border: none;
+            color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: 0.2s;
         }
 
-        .typing-indicator {
-            padding: 8px 15px;
-            font-size: 13px;
-            color: #888;
+        .send-btn:hover { transform: rotate(15deg) scale(1.1); }
+
+        .typing {
+            padding: 0 20px 10px;
+            font-size: 12px;
+            color: #95a5a6;
             display: none;
+            font-style: italic;
         }
 
+        /* Mobile */
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
-            .taskbar { width: 100%; height: 75px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid rgba(255,255,255,0.1); }
-            .window-overlay { left: 0; bottom: 75px; }
+            .taskbar {
+                width: 100%;
+                height: 80px;
+                flex-direction: row;
+                justify-content: space-around;
+                padding: 0 10px;
+                border-right: none;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+            .window-overlay { left: 0; bottom: 80px; }
             .window-content { max-width: 100%; }
+            .desktop-greeting h1 { font-size: 2.5rem; }
+            .task-icon { width: 48px; height: 48px; }
         }
     </style>
 </head>
-<body id="main-body">
+<body id="app-shell">
 
-    <div class="taskbar">
-        <div class="task-icon" id="btn-timer" onclick="openApp('timer')">🔔</div>
-        <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')">📅</div>
-        <div class="task-icon" id="btn-full" onclick="openApp('full')">📖</div>
-        <div class="task-icon" id="btn-ai" onclick="openApp('ai')">🤖</div>
-        <div class="task-icon" style="margin-top:auto; opacity:0.2;" onclick="adminLogin()">🔑</div>
-    </div>
+    <nav class="taskbar">
+        <div class="task-icon" id="btn-timer" onclick="openApp('timer')" title="Таймер">🔔</div>
+        <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')" title="На завтра">📅</div>
+        <div class="task-icon" id="btn-full" onclick="openApp('full')" title="Розклад">📖</div>
+        <div class="task-icon" id="btn-ai" onclick="openApp('ai')" title="Асистент">🤖</div>
+        <div class="task-icon" style="margin-top:auto; opacity:0.1;" onclick="adminGate()">🔑</div>
+    </nav>
 
     <div class="desktop-greeting">
-        <h1 style="font-size: 3.5rem; letter-spacing: -1px;">Пилиповицька Гімназія</h1>
-        <p style="font-size: 1.2rem; opacity: 0.9;">Education Management System</p>
+        <h1>Пилиповицька Гімназія</h1>
+        <p style="font-size: 1.2rem; opacity: 0.8; letter-spacing: 1px;">Цифрова екосистема навчання</p>
     </div>
 
-    <div class="signature">Byme © 2026</div>
+    <div class="signature">Byme OS v2.0</div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
-        <div class="window-content" id="win" onclick="event.stopPropagation()">
+        <div class="window-content" id="win-container" onclick="event.stopPropagation()">
             <div class="window-header">
-                <h2 id="win-title" style="font-weight: 600; color: #2c3e50;">Додаток</h2>
-                <span style="cursor:pointer; font-size:30px; color: #b2bec3;" onclick="closeApp()">×</span>
+                <h2 id="win-title">Завантаження...</h2>
+                <div class="close-btn" onclick="closeApp()">&times;</div>
             </div>
-            <div class="window-body" id="win-body"></div>
+            <div class="window-body" id="win-render-area">
+                </div>
         </div>
     </div>
 
     <script>
-        const ADMIN_EMAIL = "br.m.airways@gmail.com";
-        let isAdmin = localStorage.getItem('is_admin') === 'true';
+        // КОНФІГУРАЦІЯ
+        const ADMIN_MAIL = "br.m.airways@gmail.com";
+        let isEditMode = localStorage.getItem('gym_admin') === 'true';
 
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
@@ -284,187 +389,247 @@
             5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Математика", "Природа", "Історія", "Математика"] }
         };
 
-        const bells = [
+        const bellTimes = [
             {s: "08:30", e: "09:15"}, {s: "09:25", e: "10:10"},
             {s: "10:25", e: "11:10"}, {s: "11:30", e: "12:15"},
             {s: "12:25", e: "13:10"}, {s: "13:20", e: "14:05"},
             {s: "14:15", e: "15:00"}
         ];
 
-        function openApp(app) {
+        // УПРАВЛІННЯ ВІКНАМИ
+        function openApp(id) {
             const overlay = document.getElementById('overlay');
-            const win = document.getElementById('win');
-            const body = document.getElementById('win-body');
+            const win = document.getElementById('win-container');
+            const area = document.getElementById('win-render-area');
             const title = document.getElementById('win-title');
             
-            document.querySelectorAll('.task-icon').forEach(i => i.classList.remove('active'));
-            document.getElementById('btn-'+app).classList.add('active');
+            // Скидання станів
+            document.querySelectorAll('.task-icon').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-'+id).classList.add('active');
+            if(window.appInterval) clearInterval(window.appInterval);
 
-            overlay.style.display = 'flex';
+            // Анімація відкриття
+            overlay.style.display = 'block';
+            document.getElementById('app-shell').classList.add('window-open');
             setTimeout(() => win.classList.add('active'), 10);
-            document.getElementById('main-body').classList.add('window-open');
 
-            if(app === 'timer') { title.innerText = "Таймер уроків"; runTimerApp(); }
-            else if(app === 'tomorrow') { 
-                title.innerText = "На завтра"; 
-                let d = new Date().getDay();
-                let next = (d >= 5 || d === 0) ? 1 : d + 1;
-                body.innerHTML = drawDay(next, false);
-            }
-            else if(app === 'full') {
-                title.innerText = "Повний розклад";
-                let h = ""; for(let i=1; i<=5; i++) h += drawDay(i, false);
-                body.innerHTML = h;
-            }
-            else if(app === 'ai') {
-                title.innerText = "Gemini AI";
-                initChat(body);
+            // Вибір додатку
+            switch(id) {
+                case 'timer':
+                    title.innerText = "Статус занять";
+                    startTimerModule(area);
+                    break;
+                case 'tomorrow':
+                    title.innerText = "Розклад на завтра";
+                    let d = new Date().getDay();
+                    let next = (d >= 5 || d === 0) ? 1 : d + 1;
+                    area.innerHTML = renderDayUI(next, false);
+                    break;
+                case 'full':
+                    title.innerText = "Повний тиждень";
+                    let fullH = "";
+                    for(let i=1; i<=5; i++) fullH += renderDayUI(i, false);
+                    area.innerHTML = fullH;
+                    break;
+                case 'ai':
+                    title.innerText = "Quantum AI";
+                    launchChat(area);
+                    break;
             }
         }
 
         function closeApp() {
-            if(window.timerInterval) clearInterval(window.timerInterval);
-            document.getElementById('win').classList.remove('active');
+            document.getElementById('win-container').classList.remove('active');
+            document.getElementById('app-shell').classList.remove('window-open');
             setTimeout(() => {
                 document.getElementById('overlay').style.display = 'none';
-                document.getElementById('main-body').classList.remove('window-open');
+                if(window.appInterval) clearInterval(window.appInterval);
             }, 400);
         }
 
-        function drawDay(dayId, liveMode) {
-            const data = schedule[dayId];
-            if(!data) return "<p style='padding:15px;'>Сьогодні вихідний!</p>";
+        // РЕНДЕР РОЗКЛАДУ
+        function renderDayUI(dayIdx, isLive) {
+            const data = schedule[dayIdx];
+            if(!data) return `<div class="lesson-card">Сьогодні вихідний! Відпочивай.</div>`;
+            
             const now = new Date();
-            const curM = now.getHours() * 60 + now.getMinutes();
+            const nowTotal = now.getHours() * 60 + now.getMinutes();
 
-            let html = `<h3 style="margin: 20px 0 10px; color: var(--win-accent); border-bottom: 2px solid #eee;">${data.name}</h3>`;
-            data.lessons.forEach((l, i) => {
-                let state = "lesson-future";
-                if(liveMode && bells[i]) {
-                    const sm = parseInt(bells[i].s.split(':')[0])*60 + parseInt(bells[i].s.split(':')[1]);
-                    const em = parseInt(bells[i].e.split(':')[0])*60 + parseInt(bells[i].e.split(':')[1]);
-                    if (curM >= em) state = "lesson-passed";
-                    else if (curM >= sm && curM < em) state = "lesson-current";
+            let html = `<h3 style="margin: 25px 0 15px; font-size: 18px; color: var(--win-accent);">${data.name}</h3>`;
+            
+            data.lessons.forEach((name, i) => {
+                let statusClass = "lesson-future";
+                if(isLive && bellTimes[i]) {
+                    const startArr = bellTimes[i].s.split(':');
+                    const endArr = bellTimes[i].e.split(':');
+                    const sMin = parseInt(startArr[0])*60 + parseInt(startArr[1]);
+                    const eMin = parseInt(endArr[0])*60 + parseInt(endArr[1]);
+
+                    if(nowTotal >= eMin) statusClass = "lesson-passed";
+                    else if(nowTotal >= sMin && nowTotal < eMin) statusClass = "lesson-current";
                 }
-                const homework = localStorage.getItem('hw_'+l) || "Немає завдань";
+
+                const savedHW = localStorage.getItem('hw_' + name) || "Завдання не вказано";
+                
                 html += `
-                    <div class="lesson-card ${state}">
-                        <div style="display:flex; justify-content:space-between;">
-                            <strong>${i+1}. ${l}</strong>
-                            <small style="color:#888;">${bells[i] ? bells[i].s : ''}</small>
-                        </div>
-                        <div style="margin-top:8px; font-size:13px; color:#636e72;">
-                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:4px; border-radius:4px;">` : `📝 ${homework}`}
-                        </div>
-                    </div>`;
+                <div class="lesson-card ${statusClass}">
+                    <div class="lesson-info">
+                        <span class="lesson-name">${i+1}. ${name}</span>
+                        <span class="lesson-time">${bellTimes[i] ? bellTimes[i].s : '--:--'}</span>
+                    </div>
+                    <div class="homework-box">
+                        ${isEditMode ? 
+                            `<input type="text" placeholder="Введіть ДЗ..." value="${savedHW === 'Завдання не вказано' ? '' : savedHW}" 
+                             onchange="localStorage.setItem('hw_${name}', this.value)" 
+                             style="width:100%; border:none; background:transparent; outline:none; font-size:13px;">` 
+                            : `📝 ${savedHW}`}
+                    </div>
+                </div>`;
             });
             return html;
         }
 
-        function runTimerApp() {
-            const body = document.getElementById('win-body');
-            function refresh() {
+        // МОДУЛЬ ТАЙМЕРА (З ФІКСОМ ВИХІДНИХ)
+        function startTimerModule(container) {
+            function update() {
                 const now = new Date();
-                const day = now.getDay();
-                const curM = now.getHours()*60 + now.getMinutes();
-                const curS = now.getSeconds();
-                let topHtml = "";
-                let isOff = (day === 0 || day === 6 || curM > 15*60 || curM < 8*60+30);
+                let day = now.getDay();
+                
+                // ФІКС: Якщо субота (6) або неділя (0), показуємо Понеділок (1)
+                const isWeekend = (day === 0 || day === 6);
+                const activeDay = isWeekend ? 1 : day;
 
-                if(!isOff) {
-                    let found = false;
-                    bells.forEach((b, i) => {
-                        const sm = parseInt(b.s.split(':')[0])*60 + parseInt(b.s.split(':')[1]);
-                        const em = parseInt(b.e.split(':')[0])*60 + parseInt(b.e.split(':')[1]);
-                        if(curM >= sm && curM < em) {
-                            topHtml = `<div class="timer-big">${em-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">До кінця ${i+1} уроку</p>`;
-                            found = true;
-                        } else if(i < bells.length-1) {
-                            const nsm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
-                            if(curM >= em && curM < nsm) {
-                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва!</p>`;
-                                found = true;
-                            }
+                const curMin = now.getHours() * 60 + now.getMinutes();
+                const curSec = now.getSeconds();
+                let timerHtml = "";
+                let foundAny = false;
+
+                // Перевірка уроків та перерв
+                for(let i=0; i < bellTimes.length; i++) {
+                    const b = bellTimes[i];
+                    const sMin = parseInt(b.s.split(':')[0])*60 + parseInt(b.s.split(':')[1]);
+                    const eMin = parseInt(b.e.split(':')[0])*60 + parseInt(b.e.split(':')[1]);
+
+                    if(curMin >= sMin && curMin < eMin) {
+                        // Йде УРОК
+                        const remain = eMin - curMin - 1;
+                        timerHtml = `
+                            <div class="timer-display">
+                                <div class="timer-status">Триває ${i+1}-й урок</div>
+                                <div class="timer-big">${remain}:${(59-curSec).toString().padStart(2,'0')}</div>
+                                <div style="color:#74b9ff; font-weight:600;">До кінця уроку</div>
+                            </div>`;
+                        foundAny = true; break;
+                    } else if(i < bellTimes.length - 1) {
+                        const nextSMin = parseInt(bellTimes[i+1].s.split(':')[0])*60 + parseInt(bellTimes[i+1].s.split(':')[1]);
+                        if(curMin >= eMin && curMin < nextSMin) {
+                            // Йде ПЕРЕРВА
+                            const remain = nextSMin - curMin - 1;
+                            timerHtml = `
+                                <div class="timer-display">
+                                    <div class="timer-status">Велика перерва</div>
+                                    <div class="timer-big">${remain}:${(59-curSec).toString().padStart(2,'0')}</div>
+                                    <div style="color:#55efc4; font-weight:600;">До наступного уроку</div>
+                                </div>`;
+                            foundAny = true; break;
                         }
-                    });
-                    if(!found) topHtml = "<h3>Заняття закінчились</h3>";
-                } else {
-                    topHtml = "<div class='timer-big' style='font-size:24px;'>Уроків немає</div><p style='text-align:center'>Відпочивай!</p>";
+                    }
                 }
-                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.1;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
+
+                if(!foundAny) {
+                    timerHtml = `
+                        <div class="timer-display">
+                            <div class="timer-status">${curMin < 510 ? 'Ранок' : 'Навчання завершено'}</div>
+                            <div class="timer-big">--:--</div>
+                            <p style="margin-top:10px; color:#b2bec3;">${isWeekend ? 'Сьогодні вихідний (демо)' : 'Час відпочинку'}</p>
+                        </div>`;
+                }
+
+                container.innerHTML = timerHtml + renderDayUI(activeDay, true);
             }
-            refresh();
-            window.timerInterval = setInterval(refresh, 1000);
+            update();
+            window.appInterval = setInterval(update, 1000);
         }
 
-        // --- AI System ---
-        function initChat(container) {
+        // ШІ МОДУЛЬ (З ВИПРАВЛЕНИМ API)
+        function launchChat(container) {
             container.innerHTML = `
-                <div class="chat-container">
-                    <div class="chat-messages" id="chat-msgs">
-                        <div class="msg ai">Привіт! Я твій універсальний ШІ. Можеш питати мене про все на світі: від розкладу до того, як працює квантовий комп'ютер. Я спробую розібратися!</div>
+                <div class="chat-wrap">
+                    <div class="chat-messages" id="chat-flow">
+                        <div class="bubble ai">Привіт! Я твій універсальний ШІ. Можеш питати мене про все на світі: від розкладу до того, як працює квантовий комп'ютер. Я спробую розібратися!</div>
                     </div>
-                    <div class="typing-indicator" id="ai-typing">Думаю...</div>
-                    <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Запитай щось...">
-                        <button class="send-btn" onclick="processChat()">➤</button>
+                    <div class="typing" id="ai-status">Quantum Gemini аналізує запит...</div>
+                    <div class="chat-controls">
+                        <input type="text" class="chat-input" id="ai-input" placeholder="Запитай щось у ШІ...">
+                        <button class="send-btn" onclick="askAI()">➤</button>
                     </div>
                 </div>`;
-            document.getElementById('chat-in').addEventListener('keypress', (e) => e.key === 'Enter' && processChat());
+            
+            document.getElementById('ai-input').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') askAI();
+            });
         }
 
-        async function processChat() {
-            const input = document.getElementById('chat-in');
-            const msg = input.value.trim();
-            if(!msg) return;
+        async function askAI() {
+            const input = document.getElementById('ai-input');
+            const text = input.value.trim();
+            if(!text) return;
 
-            addBubble(msg, 'user');
+            // Додаємо бабл юзера
+            appendBubble(text, 'user');
             input.value = '';
-            document.getElementById('ai-typing').style.display = 'block';
             
-            const msgsDiv = document.getElementById('chat-msgs');
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
+            const status = document.getElementById('ai-status');
+            status.style.display = 'block';
 
-            const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            // API КОНФІГ (ВИПРАВЛЕНО)
+            const KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
+            const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
 
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch(ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Ти корисний асистент для учнів гімназії. Відповідай українською мовою, коротко і зрозуміло. Твоє завдання - допомагати з навчанням. Питання: ${msg}` }] }]
+                        contents: [{ 
+                            parts: [{ text: `Ти - шкільний асистент "Quantum". Користувач питає: ${text}. Відповідай українською, чітко і по суті.` }] 
+                        }]
                     })
                 });
-                
+
                 const data = await response.json();
-                document.getElementById('ai-typing').style.display = 'none';
+                status.style.display = 'none';
 
                 if(data.candidates && data.candidates[0].content) {
-                    addBubble(data.candidates[0].content.parts[0].text, 'ai');
+                    appendBubble(data.candidates[0].content.parts[0].text, 'ai');
                 } else {
-                    throw new Error("Невірна відповідь");
+                    throw new Error("API_ERROR");
                 }
             } catch (err) {
-                document.getElementById('ai-typing').style.display = 'none';
-                addBubble(`⚠️ Помилка з'єднання або ключа API.`, 'ai');
+                status.style.display = 'none';
+                appendBubble("⚠️ Помилка доступу. Можливо, API-ключ заблоковано через публічне використання. Спробуй оновити ключ у налаштуваннях.", 'ai');
             }
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
         }
 
-        function addBubble(text, type) {
+        function appendBubble(msg, role) {
+            const flow = document.getElementById('chat-flow');
             const div = document.createElement('div');
-            div.className = `msg ${type}`;
-            div.innerText = text;
-            document.getElementById('chat-msgs').appendChild(div);
+            div.className = `bubble ${role}`;
+            div.innerText = msg;
+            flow.appendChild(div);
+            flow.scrollTop = flow.scrollHeight;
         }
 
-        function adminLogin() {
-            const m = prompt("Email:");
-            if(m === ADMIN_EMAIL) {
-                isAdmin = true;
-                localStorage.setItem('is_admin', 'true');
+        // АДМІНКА
+        function adminGate() {
+            const p = prompt("Введіть ключ доступу:");
+            if(p === ADMIN_MAIL) {
+                isEditMode = true;
+                localStorage.setItem('gym_admin', 'true');
+                alert("Доступ дозволено. Тепер можна редагувати ДЗ прямо в розкладі.");
                 location.reload();
+            } else {
+                alert("Відмовлено.");
             }
         }
     </script>
