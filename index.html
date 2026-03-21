@@ -405,9 +405,8 @@
                 localStorage.setItem('my_ai_key', GEMINI_API_KEY);
             }
         }
-
-// Посилання тепер збирається з того, що ти ввів
-const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
