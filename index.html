@@ -394,8 +394,20 @@
     <script>
         const ADMIN_MAIL = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
-        const GEMINI_API_KEY = "AIzaSyBy2O499m2bxEZms3sfxekvM2PyhHf0kmQ"; 
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // --- БЕЗПЕЧНА КОНФІГУРАЦІЯ ---
+        // Пробуємо дістати ключ з пам'яті браузера
+        let GEMINI_API_KEY = localStorage.getItem('my_ai_key');
+        
+        // Якщо ключа немає — просимо користувача (тебе) його ввести
+        if (!GEMINI_API_KEY) {
+            GEMINI_API_KEY = prompt("Введіть ваш Gemini API Key (один раз):");
+            if (GEMINI_API_KEY) {
+                localStorage.setItem('my_ai_key', GEMINI_API_KEY);
+            }
+        }
+
+// Посилання тепер збирається з того, що ти ввів
+const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
