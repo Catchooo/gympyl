@@ -237,6 +237,7 @@
             display: none;
         }
 
+        /* Mobile adaptation */
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
             .taskbar { width: 100%; height: 75px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid rgba(255,255,255,0.1); }
@@ -317,7 +318,7 @@
                 body.innerHTML = h;
             }
             else if(app === 'ai') {
-                title.innerText = "Gemini AI";
+                title.innerText = "Quantum Gemini";
                 initChat(body);
             }
         }
@@ -333,7 +334,7 @@
 
         function drawDay(dayId, liveMode) {
             const data = schedule[dayId];
-            if(!data) return "<p style='padding:10px;'>Сьогодні вихідний!</p>";
+            if(!data) return "<p style='padding:15px;'>Сьогодні вихідний!</p>";
             const now = new Date();
             const curM = now.getHours() * 60 + now.getMinutes();
 
@@ -351,9 +352,10 @@
                     <div class="lesson-card ${state}">
                         <div style="display:flex; justify-content:space-between;">
                             <strong>${i+1}. ${l}</strong>
+                            <small style="color:#888;">${bells[i] ? bells[i].s : ''}</small>
                         </div>
                         <div style="margin-top:8px; font-size:13px; color:#636e72;">
-                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:4px;">` : `📝 ${homework}`}
+                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:4px; border-radius:4px;">` : `📝 ${homework}`}
                         </div>
                     </div>`;
             });
@@ -368,7 +370,7 @@
                 const curM = now.getHours()*60 + now.getMinutes();
                 const curS = now.getSeconds();
                 let topHtml = "";
-                let isOff = (day === 0 || day === 6 || curM > 15*60);
+                let isOff = (day === 0 || day === 6 || curM > 15*60 || curM < 8*60+30);
 
                 if(!isOff) {
                     let found = false;
@@ -381,14 +383,14 @@
                         } else if(i < bells.length-1) {
                             const nsm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
                             if(curM >= em && curM < nsm) {
-                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва</p>`;
+                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва!</p>`;
                                 found = true;
                             }
                         }
                     });
                     if(!found) topHtml = "<h3>Заняття закінчились</h3>";
                 } else {
-                    topHtml = "<div class='timer-big'>Відпочинок</div>";
+                    topHtml = "<div class='timer-big' style='font-size:24px;'>Уроків немає</div><p style='text-align:center'>Відпочивай!</p>";
                 }
                 body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.1;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
             }
@@ -396,7 +398,7 @@
             window.timerInterval = setInterval(refresh, 1000);
         }
 
-        // --- AI CHAT SYSTEM ---
+        // --- AI ENGINE (FIXED) ---
         function initChat(container) {
             container.innerHTML = `
                 <div class="chat-container">
@@ -405,7 +407,7 @@
                     </div>
                     <div class="typing-indicator" id="ai-typing">Думаю...</div>
                     <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Напишіть повідомлення...">
+                        <input type="text" class="chat-input" id="chat-in" placeholder="Запитай щось...">
                         <button class="send-btn" onclick="processChat()">➤</button>
                     </div>
                 </div>`;
@@ -420,35 +422,40 @@
             addBubble(msg, 'user');
             input.value = '';
             document.getElementById('ai-typing').style.display = 'block';
+            
+            const msgsDiv = document.getElementById('chat-msgs');
+            msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
             const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            // Використовуємо стабільний v1 ендпоінт
+            const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
             try {
                 const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Ти корисний асистент. Давай чіткі відповіді українською мовою. Питання: ${msg}` }] }]
+                        contents: [{ parts: [{ text: `Ти корисний асистент для учнів гімназії. Відповідай українською мовою, конкретно і без зайвої води. Питання: ${msg}` }] }]
                     })
                 });
-
-                const data = await response.json();
                 
-                if (data.candidates && data.candidates[0].content) {
+                const data = await response.json();
+                console.log("API Response:", data); // Для відладки в F12
+
+                if(data.candidates && data.candidates[0].content) {
                     const aiReply = data.candidates[0].content.parts[0].text;
                     document.getElementById('ai-typing').style.display = 'none';
                     addBubble(aiReply, 'ai');
+                } else if (data.error) {
+                    throw new Error(data.error.message);
                 } else {
                     throw new Error("Невірна структура відповіді");
                 }
             } catch (err) {
+                console.error("Chat Error:", err);
                 document.getElementById('ai-typing').style.display = 'none';
-                addBubble("Вибач, сталася помилка з'єднання. Перевір консоль (F12) або ключ.", 'ai');
-                console.error("API Error:", err);
+                addBubble(`⚠️ Помилка: ${err.message}. Перевір ключ або ліміти в AI Studio.`, 'ai');
             }
-            
-            const msgsDiv = document.getElementById('chat-msgs');
             msgsDiv.scrollTop = msgsDiv.scrollHeight;
         }
 
@@ -460,8 +467,13 @@
         }
 
         function adminLogin() {
-            const m = prompt("Email:");
-            if(m === ADMIN_EMAIL) { isAdmin = true; localStorage.setItem('is_admin', 'true'); location.reload(); }
+            const m = prompt("Введіть email:");
+            if(m === ADMIN_EMAIL) {
+                isAdmin = true;
+                localStorage.setItem('is_admin', 'true');
+                alert("Доступ адміна активовано.");
+                location.reload();
+            }
         }
     </script>
 </body>
