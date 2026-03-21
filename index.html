@@ -40,7 +40,6 @@
             transition: 0.4s; pointer-events: none;
         }
         body.window-open .desktop-greeting { opacity: 0; }
-
         .desktop-greeting h1 { font-size: clamp(28px, 8vw, 64px); font-weight: 200; }
 
         .window-overlay { position: fixed; top: 0; left: 60px; bottom: 0; right: 0; background: rgba(0,0,0,0.3); display: none; z-index: 500; }
@@ -132,7 +131,8 @@
             else if(app === 'tomorrow') { 
                 title.innerText = "На завтра"; 
                 const d = new Date().getDay();
-                body.innerHTML = renderDay((d >= 5 || d === 0) ? 1 : d + 1, false);
+                let nextDay = (d >= 5 || d === 0) ? 1 : d + 1;
+                body.innerHTML = renderDay(nextDay, false);
             }
             else { 
                 title.innerText = "Тиждень"; 
@@ -162,14 +162,12 @@
             data.lessons.forEach((l, i) => {
                 let statusClass = "";
                 if(isToday && checkStatus) {
-                    const lessonEnd = parseInt(bells[i].e.split(':')[0])*60 + parseInt(bells[i].e.split(':')[1]);
-                    const lessonStart = parseInt(bells[i].s.split(':')[0])*60 + parseInt(bells[i].s.split(':')[1]);
-                    
-                    if (curMin >= lessonEnd) statusClass = "lesson-passed";
-                    else if (curMin >= lessonStart && curMin < lessonEnd) statusClass = "lesson-current";
+                    const sm = parseInt(bells[i].s.split(':')[0])*60 + parseInt(bells[i].s.split(':')[1]);
+                    const em = parseInt(bells[i].e.split(':')[0])*60 + parseInt(bells[i].e.split(':')[1]);
+                    if (curMin >= em) statusClass = "lesson-passed";
+                    else if (curMin >= sm && curMin < em) statusClass = "lesson-current";
                     else statusClass = "lesson-future";
                 }
-
                 const hw = localStorage.getItem('hw_'+l) || "Немає ДЗ";
                 html += `<div class="lesson-card ${statusClass}">
                     <strong>${i+1}. ${l}</strong>
@@ -184,14 +182,14 @@
             const body = document.getElementById('win-body');
             function update() {
                 const now = new Date();
-                const today = now.getDay();
+                let today = now.getDay();
                 const cur = now.getHours()*60 + now.getMinutes();
                 const sec = 60 - now.getSeconds();
                 let content = "";
 
-                // Якщо вихідний
+                // Якщо вихідний, просто показуємо розклад на понеділок і кажемо відпочивати
                 if (today === 0 || today === 6) {
-                    content = `<div style="text-align:center; padding:40px 0;"><h3>Уроків вже немає</h3><p>Відпочивай!</p></div>`;
+                    content = `<div style="text-align:center; padding:20px 0;"><h3>Сьогодні вихідний!</h3><p>Уроків немає, відпочивай.</p></div><hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">` + renderDay(1, false);
                 } else {
                     let found = false;
                     const lastBell = parseInt(bells[bells.length-1].e.split(':')[0])*60 + parseInt(bells[bells.length-1].e.split(':')[1]);
@@ -202,7 +200,6 @@
                         bells.forEach((b, i) => {
                             const sm = parseInt(b.s.split(':')[0])*60 + parseInt(b.s.split(':')[1]);
                             const em = parseInt(b.e.split(':')[0])*60 + parseInt(b.e.split(':')[1]);
-                            
                             if(cur >= sm && cur < em) {
                                 content = `<div class="timer-big">${em - cur - 1}:${sec < 10 ? '0'+sec : sec}</div><p style="text-align:center">До кінця ${i+1}-го уроку</p>`;
                                 found = true;
@@ -214,14 +211,13 @@
                                 }
                             }
                         });
-                        // Якщо до початку першого уроку
                         if (!found && cur < parseInt(bells[0].s.split(':')[0])*60 + parseInt(bells[0].s.split(':')[1])) {
-                             const firstSm = parseInt(bells[0].s.split(':')[0])*60 + parseInt(bells[0].s.split(':')[1]);
-                             content = `<div class="timer-big">${firstSm - cur - 1}:${sec < 10 ? '0'+sec : sec}</div><p style="text-align:center">До початку занять</p>`;
+                             const fSm = parseInt(bells[0].s.split(':')[0])*60 + parseInt(bells[0].s.split(':')[1]);
+                             content = `<div class="timer-big">${fSm - cur - 1}:${sec < 10 ? '0'+sec : sec}</div><p style="text-align:center">До початку занять</p>`;
                              found = true;
                         }
                     }
-                    if (found || cur >= lastBell) content += `<hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">` + renderDay(today, true);
+                    content += `<hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">` + renderDay(today, true);
                 }
                 body.innerHTML = content;
             }
