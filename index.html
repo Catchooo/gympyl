@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>School site</title>
+    <title>School OS + Advanced AI</title>
     <style>
         :root {
             --win-bg: #2c3e50;
@@ -13,8 +13,9 @@
             --main-font: 'Segoe UI', system-ui, -apple-system, sans-serif;
             --color-passed: #95a5a6; 
             --color-future: #2ecc71; 
-            --ai-bubble: #e1dcf9;
+            --ai-bubble: #ffffff;
             --user-bubble: #6c5ce7;
+            --bg-window: #f0f2f5;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--main-font); }
@@ -24,62 +25,67 @@
             height: 100vh; display: flex; overflow: hidden; position: relative;
         }
 
+        /* Taskbar */
         .taskbar {
-            width: 60px; background: var(--taskbar-bg); backdrop-filter: blur(10px); height: 100%;
-            display: flex; flex-direction: column; align-items: center; padding: 15px 0; gap: 20px;
+            width: 60px; background: var(--taskbar-bg); backdrop-filter: blur(15px); height: 100%;
+            display: flex; flex-direction: column; align-items: center; padding: 15px 0; gap: 15px;
             z-index: 1000; border-right: 1px solid rgba(255,255,255,0.1);
         }
 
-        .task-icon { width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 22px; color: white; transition: 0.2s; border-radius: 8px; }
-        .task-icon.active { background: rgba(255,255,255,0.2); border-left: 3px solid var(--win-accent); }
-        .task-icon:hover { background: rgba(255,255,255,0.1); }
+        .task-icon { width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 20px; color: white; transition: 0.3s; border-radius: 10px; }
+        .task-icon.active { background: var(--win-accent); box-shadow: 0 0 15px var(--win-accent); }
+        .task-icon:hover:not(.active) { background: rgba(255,255,255,0.1); }
 
+        /* Desktop */
         .desktop-greeting {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; color: white; text-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 10; width: 90%;
-            transition: 0.4s; pointer-events: none;
+            transition: 0.5s; pointer-events: none;
         }
-        body.window-open .desktop-greeting { opacity: 0; }
+        body.window-open .desktop-greeting { opacity: 0; transform: translate(-50%, -60%); }
 
-        .window-overlay { position: fixed; top: 0; left: 60px; bottom: 0; right: 0; background: rgba(0,0,0,0.3); display: none; z-index: 500; }
-        .window-content { width: 100%; max-width: 420px; background: #f2f2f2; height: 100%; transform: translateX(-100%); transition: 0.4s; display: flex; flex-direction: column; }
+        /* Window System */
+        .window-overlay { position: fixed; top: 0; left: 60px; bottom: 0; right: 0; background: rgba(0,0,0,0.2); display: none; z-index: 500; backdrop-filter: blur(5px); }
+        .window-content { width: 100%; max-width: 450px; background: var(--bg-window); height: 100%; transform: translateX(-100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.2); }
         .window-content.active { transform: translateX(0); }
         .window-header { padding: 15px 20px; background: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; }
-        .window-body { flex: 1; overflow-y: auto; padding: 15px; scroll-behavior: smooth; }
+        .window-body { flex: 1; overflow-y: auto; padding: 15px; scrollbar-width: thin; }
 
-        /* AI Chat Styles */
+        /* AI Chat Interface */
         .chat-container { display: flex; flex-direction: column; height: 100%; }
-        .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; }
-        .msg { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 14px; line-height: 1.4; animation: msgShow 0.3s ease; position: relative; }
-        @keyframes msgShow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 10px 5px; }
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14.5px; line-height: 1.5; animation: msgPop 0.3s ease-out; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        @keyframes msgPop { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         
-        .msg.ai { align-self: flex-start; background: var(--ai-bubble); color: #333; border-bottom-left-radius: 2px; }
-        .msg.user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; }
+        .msg.ai { align-self: flex-start; background: var(--ai-bubble); color: #2d3436; border-bottom-left-radius: 4px; border: 1px solid #e0e0e0; }
+        .msg.user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 4px; }
         
-        .chat-input-area { padding: 10px; background: white; border-top: 1px solid #ddd; display: flex; gap: 8px; }
-        .chat-input { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 8px 15px; outline: none; transition: 0.2s; }
-        .chat-input:focus { border-color: var(--win-accent); }
-        .send-btn { background: var(--win-accent); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .send-btn:hover { transform: scale(1.1); }
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px; align-items: center; }
+        .chat-input { flex: 1; border: 1px solid #ddd; border-radius: 25px; padding: 10px 18px; outline: none; transition: 0.3s; font-size: 14px; background: #f8f9fa; }
+        .chat-input:focus { border-color: var(--win-accent); background: #fff; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1); }
+        
+        .send-btn { background: var(--win-accent); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3); }
+        .send-btn:hover { transform: rotate(10deg) scale(1.1); }
 
-        .typing { font-style: italic; font-size: 12px; color: #777; margin-bottom: 5px; display: none; }
-        .dot { animation: blink 1.4s infinite both; }
+        /* AI Thinking Animation */
+        .typing { padding: 8px 15px; background: #fff; border-radius: 15px; display: none; width: fit-content; margin-bottom: 10px; border: 1px solid #eee; }
+        .dot { display: inline-block; width: 5px; height: 5px; background: #ccc; border-radius: 50%; margin: 0 2px; animation: wave 1.3s infinite; }
         .dot:nth-child(2) { animation-delay: 0.2s; }
         .dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes blink { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
+        @keyframes wave { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
-        /* Schedule Cards */
-        .lesson-card { background: white; padding: 12px; margin-bottom: 8px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #ddd; }
+        /* General UI Elements */
+        .lesson-card { background: white; padding: 12px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .lesson-future { border-left-color: var(--color-future); }
         .lesson-passed { border-left-color: var(--color-passed); opacity: 0.6; }
         .lesson-current { border-left-color: var(--win-accent); transform: scale(1.02); font-weight: bold; }
         .timer-big { font-size: 36px; text-align: center; font-weight: bold; color: var(--win-accent); margin: 15px 0; }
-        .signature { position: absolute; bottom: 15px; right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 13px; }
+        .signature { position: absolute; bottom: 15px; right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 12px; }
 
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
-            .taskbar { width: 100%; height: 65px; flex-direction: row; justify-content: space-around; padding: 0; }
-            .window-overlay { left: 0; bottom: 65px; }
+            .taskbar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-top: 1px solid rgba(255,255,255,0.1); }
+            .window-overlay { left: 0; bottom: 60px; }
             .window-content { max-width: 100%; }
         }
     </style>
@@ -87,25 +93,25 @@
 <body>
 
     <div class="taskbar">
-        <div class="task-icon" id="icon-timer" onclick="openApp('timer')">🔔</div>
-        <div class="task-icon" id="icon-tomorrow" onclick="openApp('tomorrow')">📅</div>
-        <div class="task-icon" id="icon-full" onclick="openApp('full')">📚</div>
-        <div class="task-icon" id="icon-ai" onclick="openApp('ai')">🤖</div>
+        <div class="task-icon" id="icon-timer" title="Таймер" onclick="openApp('timer')">🔔</div>
+        <div class="task-icon" id="icon-tomorrow" title="Завтра" onclick="openApp('tomorrow')">📅</div>
+        <div class="task-icon" id="icon-full" title="Тиждень" onclick="openApp('full')">📚</div>
+        <div class="task-icon" id="icon-ai" title="Gemini AI" onclick="openApp('ai')">✨</div>
         <div class="task-icon" style="margin-top:auto; opacity:0.3;" onclick="login()">🔑</div>
     </div>
 
     <div class="desktop-greeting">
         <h1>Пилиповицька Гімназія</h1> 
-        <p>Personal lesson list</p>
+        <p>Система управління розкладом v2.0</p>
     </div>
 
-    <div class="signature">Byme</div>
+    <div class="signature">Created by Byme</div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
         <div class="window-content" id="win" onclick="event.stopPropagation()">
             <div class="window-header">
-                <h2 id="win-title">Додаток</h2>
-                <span style="cursor:pointer; font-size:24px;" onclick="closeApp()">✕</span>
+                <h2 id="win-title" style="font-size: 18px; color: #333;">Додаток</h2>
+                <span style="cursor:pointer; font-size:20px; color: #999;" onclick="closeApp()">✕</span>
             </div>
             <div class="window-body" id="win-body"></div>
         </div>
@@ -161,7 +167,7 @@
                 body.innerHTML = h;
             }
             else if(app === 'ai') {
-                title.innerText = "ШІ Помічник";
+                title.innerHTML = "✨ Gemini AI <span style='font-size:10px; opacity:0.5;'>v2.0</span>";
                 initAIChat(body);
             }
         }
@@ -197,7 +203,7 @@
                 const hw = localStorage.getItem('hw_'+l) || "Немає ДЗ";
                 html += `<div class="lesson-card ${statusClass}">
                     <strong>${i+1}. ${l}</strong>
-                    <div>${isAdmin ? `<input value="${hw==='Немає ДЗ'?'':hw}" onchange="localStorage.setItem('hw_${l}', this.value)">` : `📝 ${hw}`}</div>
+                    <div style="font-size:13px; color:#666; margin-top:5px;">${isAdmin ? `<input value="${hw==='Немає ДЗ'?'':hw}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:2px 5px;">` : `📝 ${hw}`}</div>
                 </div>`;
             });
             return html;
@@ -257,21 +263,24 @@
             timerTick = setInterval(update, 1000);
         }
 
-        // --- AI CHAT LOGIC ---
+        // --- ENHANCED AI LOGIC ---
         function initAIChat(container) {
             container.innerHTML = `
                 <div class="chat-container">
                     <div class="chat-messages" id="chat-msgs">
-                        <div class="msg ai">Привіт! Я твій шкільний помічник. Запитай мене про розклад або просто поспілкуйся!</div>
+                        <div class="msg ai">Вітаю! Я — Gemini AI. Я можу аналізувати твій розклад, відповідати на будь-які питання про науку, історію або просто поговорити. Чим можу бути корисним?</div>
                     </div>
-                    <div class="typing" id="ai-typing">ШІ думає<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>
+                    <div class="typing" id="ai-typing">
+                        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    </div>
                     <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Напишіть щось...">
+                        <input type="text" class="chat-input" id="chat-in" placeholder="Запитуй про що завгодно...">
                         <button class="send-btn" onclick="sendMsg()">➤</button>
                     </div>
                 </div>
             `;
             const input = document.getElementById('chat-in');
+            input.focus();
             input.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMsg(); });
         }
 
@@ -286,39 +295,57 @@
             const typing = document.getElementById('ai-typing');
             typing.style.display = 'block';
             
-            // Scroll to bottom
             const msgs = document.getElementById('chat-msgs');
             msgs.scrollTop = msgs.scrollHeight;
 
+            // Більш реалістична затримка залежно від довжини "думки"
             setTimeout(() => {
                 typing.style.display = 'none';
-                const reply = getAIResponse(text);
+                const reply = getAdvancedResponse(text);
                 addBubble(reply, 'ai');
                 msgs.scrollTop = msgs.scrollHeight;
-            }, 1500); // Імітація "думки" ШІ
+            }, 1000 + Math.random() * 1000);
         }
 
         function addBubble(text, side) {
             const container = document.getElementById('chat-msgs');
             const div = document.createElement('div');
             div.className = `msg ${side}`;
-            div.innerText = text;
+            div.innerHTML = text.replace(/\n/g, '<br>');
             container.appendChild(div);
         }
 
-        function getAIResponse(input) {
-            const low = input.toLowerCase();
-            if(low.includes('привіт')) return "Привіт! Чим можу допомогти?";
-            if(low.includes('розклад')) return "Ти можеш подивитися повний розклад у вкладці з книжкою (📚) або запитати мене про конкретний день.";
-            if(low.includes('понеділок')) return "У понеділок у вас: " + schedule[1].lessons.join(', ');
-            if(low.includes('вівторок')) return "У вівторок за розкладом: " + schedule[2].lessons.join(', ');
-            if(low.includes('середа')) return "Середа: " + schedule[3].lessons.join(', ');
-            if(low.includes('четвер')) return "Четвер: " + schedule[4].lessons.join(', ');
-            if(low.includes('п\'ятниця') || low.includes('п’ятниця')) return "П'ятниця: " + schedule[5].lessons.join(', ');
-            if(low.includes('хто ти')) return "Я твій персональний ШІ-асистент.";
-            if(low.includes('дякую')) return "Завжди радий допомогти!";
+        function getAdvancedResponse(input) {
+            const q = input.toLowerCase();
             
-            return "Цікаве питання! На жаль, я поки що тільки вчуся, але я точно знаю твій розклад.";
+            // База знань про школу
+            if(q.includes('розклад') || q.includes('уроки')) {
+                if(q.includes('пон')) return "У понеділок ти маєш такий список предметів:\n• " + schedule[1].lessons.join('\n• ');
+                if(q.includes('вівт')) return "Вівторок буде насиченим:\n• " + schedule[2].lessons.join('\n• ');
+                if(q.includes('сер')) return "Середа — середина тижня:\n• " + schedule[3].lessons.join('\n• ');
+                if(q.includes('чет')) return "Четвер, скоро вихідні:\n• " + schedule[4].lessons.join('\n• ');
+                if(q.includes('п’ят') || q.includes('пят')) return "Останній ривок у п'ятницю:\n• " + schedule[5].lessons.join('\n• ');
+                return "Я можу підказати розклад на будь-який день тижня. Просто напиши назву дня!";
+            }
+
+            // Загальні знання (Імітація)
+            if(q.includes('як справи')) return "У мене все чудово! Працюю на повну потужність у Пилиповицькій гімназії. А як твій день?";
+            if(q.includes('хто тебе створив')) return "Розробка Містер Бараболя";
+            if(q.includes('програмування') || q.includes('код')) return "Програмування — це круто! Цей сайт написано на HTML, CSS та JavaScript. Ти хочеш дізнатися більше про якусь конкретну мову?";
+            if(q.includes('математика') || q.includes('скільки')) return "Я люблю цифри! Наприклад, сума кутів трикутника завжди дорівнює 180°. А яке рівняння ти хочеш розв'язати?";
+            if(q.includes('космос')) return "Космос неймовірний! Чи знав ти, що Сонце настільки велике, що в нього може поміститися близько 1.3 мільйона планет Земля?";
+            if(q.includes('напиши') && q.includes('код')) return "Ось приклад простої функції на JS:\n\nfunction hello() {\n  console.log('Привіт!');\n}";
+            if(q.includes('жарт')) return "Чому програмісти люблять темну тему? Бо на світло злітаються баги! 😂";
+            
+            // Універсальна відповідь "розумного" бота
+            const fallbacks = [
+                "Це цікаве питання! З наукової точки зору, це можна розглядати з різних боків. Ти хочеш, щоб я заглибився в деталі?",
+                "Я розумію, про що ти. На жаль, моя поточна база даних обмежена, але я можу спробувати проаналізувати це, якщо ти надаси більше контексту.",
+                "Гарне запитання! Як ШІ, я можу сказати, що це залежить від багатьох факторів. Наприклад, якщо ми говоримо про навчання, то головне — системність.",
+                "Я якраз думав про щось подібне. Ти знаєш, що критичне мислення — це найважливіша навичка у 2024 році?"
+            ];
+            
+            return fallbacks[Math.floor(Math.random() * fallbacks.length)];
         }
     </script>
 </body>
