@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Пилиповицька Гімназія | Платформа</title>
+    <title>Пилиповицька Гімназія</title>
     <style>
         :root {
             --win-bg: #2c3e50;
             --win-accent: #6c5ce7;
-            --taskbar-bg: rgba(0, 0, 0, 0.9);
+            --taskbar-bg: rgba(0, 0, 0, 0.85);
             --text-light: #ffffff;
             --main-font: 'Segoe UI', system-ui, -apple-system, sans-serif;
             --color-passed: #95a5a6; 
@@ -277,6 +277,7 @@
         const ADMIN_EMAIL = "br.m.airways@gmail.com";
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
+        // ПОВНИЙ РОЗКЛАД
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
             2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
@@ -334,7 +335,7 @@
         }
 
         function closeApp() {
-            clearInterval(timerInterval);
+            if(timerInterval) clearInterval(timerInterval);
             document.getElementById('win').classList.remove('active');
             setTimeout(() => {
                 document.getElementById('overlay').style.display = 'none';
@@ -344,7 +345,7 @@
 
         function drawDay(dayId, liveMode) {
             const data = schedule[dayId];
-            if(!data) return "";
+            if(!data) return "<p>Сьогодні вихідний!</p>";
             const now = new Date();
             const curM = now.getHours() * 60 + now.getMinutes();
 
@@ -410,74 +411,69 @@
         }
 
         // --- AI ENGINE ---
-// Додаємо бібліотеку Google AI прямо в скрипт
-        const script = document.createElement('script');
-        script.type = 'importmap';
-        script.innerHTML = JSON.stringify({
-            "imports": {
-                "@google/generative-ai": "https://esm.run/@google/generative-ai"
-            }
-        });
-        document.head.appendChild(script);
-
-// --- ОНОВЛЕНИЙ AI ENGINE ---
         function initChat(container) {
             container.innerHTML = `
-            <div class="chat-container">
-            <div class="chat-messages" id="chat-msgs">
-            <div class="msg ai">Привіт! Я оновив протокол зв'язку. Спробуй написати зараз.</div>
-            </div>
-            <div class="typing-indicator" id="ai-typing">Gemini роздумує...</div>
-            <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chat-in" placeholder="Запитання до ШІ...">
-            <button class="send-btn" onclick="processChat()">➤</button>
-                </div>
-        </div>`;
-    document.getElementById('chat-in').focus();
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-msgs">
+                        <div class="msg ai">Я знову в строю! Твій ключ прописаний. Про що поговоримо?</div>
+                    </div>
+                    <div class="typing-indicator" id="ai-typing" style="display:none; padding:10px; color:#888;">Gemini генерує відповідь...</div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chat-in" placeholder="Напиши повідомлення...">
+                        <button class="send-btn" onclick="processChat()">➤</button>
+                    </div>
+                </div>`;
+            document.getElementById('chat-in').focus();
+            document.getElementById('chat-in').addEventListener('keypress', (e) => e.key === 'Enter' && processChat());
         }
 
-async function processChat() {
-    const input = document.getElementById('chat-in');
-    const msg = input.value.trim();
-    if(!msg) return;
+        async function processChat() {
+            const input = document.getElementById('chat-in');
+            const msg = input.value.trim();
+            if(!msg) return;
 
-    addBubble(msg, 'user');
-    input.value = '';
-    document.getElementById('ai-typing').style.display = 'block';
-    
-    const msgsDiv = document.getElementById('chat-msgs');
-    msgsDiv.scrollTop = msgsDiv.scrollHeight;
+            addBubble(msg, 'user');
+            input.value = '';
+            document.getElementById('ai-typing').style.display = 'block';
+            
+            const msgsDiv = document.getElementById('chat-msgs');
+            msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-    // Твій ключ
-    const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
+            const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-    try {
-        // Імпортуємо модуль на льоту
-        const { GoogleGenerativeAI } = await import("@google/generative-ai");
-        const genAI = new GoogleGenerativeAI(API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const result = await model.generateContent(`Ти асистент Пилиповицької гімназії. Відповідай коротко і тільки українською. Питання: ${msg}`);
-        const response = await result.response;
-        const text = response.text();
-
-        document.getElementById('ai-typing').style.display = 'none';
-        addBubble(text, 'ai');
-    } catch (err) {
-        console.error(err);
-        document.getElementById('ai-typing').style.display = 'none';
-        
-        // Перевірка конкретних помилок
-        if (err.message.includes('API_KEY_INVALID')) {
-            addBubble("❌ Ключ недійсний. Перевір його в Google AI Studio.", 'ai');
-        } else if (err.message.includes('SAFETY')) {
-            addBubble("⚠️ ШІ заблокував відповідь через цензуру.", 'ai');
-        } else {
-            addBubble("⚠️ Помилка доступу. Google блокує прямий запит з браузера. Треба або проксі, або Python-сервер.", 'ai');
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Ти асистент Пилиповицької гімназії. Відповідай українською мовою. Питання: ${msg}` }] }]
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if(data.candidates && data.candidates[0].content) {
+                    const aiReply = data.candidates[0].content.parts[0].text;
+                    document.getElementById('ai-typing').style.display = 'none';
+                    addBubble(aiReply, 'ai');
+                } else {
+                    throw new Error("Невірна відповідь API");
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('ai-typing').style.display = 'none';
+                addBubble("⚠️ Помилка! Перевір API ключ (AI Studio) або чи не блокує браузер прямі запити (CORS).", 'ai');
+            }
+            msgsDiv.scrollTop = msgsDiv.scrollHeight;
         }
-    }
-    msgsDiv.scrollTop = msgsDiv.scrollHeight;
-}
+
+        function addBubble(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerText = text;
+            document.getElementById('chat-msgs').appendChild(div);
+        }
     </script>
 </body>
 </html>
