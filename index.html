@@ -296,7 +296,6 @@
             if(m === ADMIN_EMAIL) {
                 isAdmin = true;
                 localStorage.setItem('is_admin', 'true');
-                alert("Доступ дозволено. Тепер ви можете редагувати ДЗ.");
                 location.reload();
             }
         }
@@ -327,7 +326,7 @@
                 body.innerHTML = h;
             }
             else if(app === 'ai') {
-                title.innerText = "Quantum Gemini";
+                title.innerText = "Gemini AI";
                 initChat(body);
             }
         }
@@ -361,10 +360,9 @@
                     <div class="lesson-card ${state}">
                         <div style="display:flex; justify-content:space-between;">
                             <strong>${i+1}. ${l}</strong>
-                            <small style="color:#888;">${bells[i] ? bells[i].s : ''}</small>
                         </div>
                         <div style="margin-top:8px; font-size:13px; color:#636e72;">
-                            ${isAdmin ? `<input type="text" placeholder="Вписати ДЗ..." value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:4px;">` : `📝 ${homework}`}
+                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:2px;">` : `📝 ${homework}`}
                         </div>
                     </div>`;
             });
@@ -393,31 +391,31 @@
                         } else if(i < bells.length-1) {
                             const nsm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
                             if(curM >= em && curM < nsm) {
-                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва! До наступного уроку</p>`;
+                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва</p>`;
                                 found = true;
                             }
                         }
                     });
-                    if(!found) topHtml = "<h3>Заняття ще не почались або вже закінчились</h3>";
+                    if(!found) topHtml = "<h3>Заняття закінчились</h3>";
                 } else {
-                    topHtml = "<div class='timer-big' style='font-size:24px;'>Уроків немає</div><p style='text-align:center'>Відпочивай!</p>";
+                    topHtml = "<div class='timer-big'>Відпочинок</div>";
                 }
-                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.2;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
+                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.1;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
             }
             refresh();
             timerInterval = setInterval(refresh, 1000);
         }
 
-        // --- AI CHAT LOGIC ---
+        // --- THE AI CHAT ENGINE ---
         function initChat(container) {
             container.innerHTML = `
                 <div class="chat-container">
                     <div class="chat-messages" id="chat-msgs">
-                        <div class="msg ai">Привіт! Я підключений до Gemini 1.5. Питайте про що завгодно: розклад, складні задачі або просто поспілкуємось.</div>
+                        <div class="msg ai">Привіт! Я твій Gemini-асистент. Запитуй будь-що!</div>
                     </div>
-                    <div class="typing-indicator" id="ai-typing">Gemini думає...</div>
+                    <div class="typing-indicator" id="ai-typing">ШІ генерує відповідь...</div>
                     <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Напишіть повідомлення...">
+                        <input type="text" class="chat-input" id="chat-in" placeholder="Ваше запитання...">
                         <button class="send-btn" onclick="processChat()">➤</button>
                     </div>
                 </div>`;
@@ -432,25 +430,32 @@
             addBubble(msg, 'user');
             input.value = '';
             document.getElementById('ai-typing').style.display = 'block';
-            
-            const msgsDiv = document.getElementById('chat-msgs');
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
+
+            // ВСТАВ СВІЙ API KEY НИЖЧЕ!
+            const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
             try {
-                // Відправка на Python сервер (Server.py має бути запущений)
-                const response = await fetch('http://127.0.0.1:5000/ask', {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg })
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Ти асистент Пилиповицької гімназії. Відповідай коротко. Питання: ${msg}` }] }]
+                    })
                 });
-                
+
                 const data = await response.json();
+                const aiReply = data.candidates[0].content.parts[0].text;
+                
                 document.getElementById('ai-typing').style.display = 'none';
-                addBubble(data.reply, 'ai');
+                addBubble(aiReply, 'ai');
             } catch (err) {
                 document.getElementById('ai-typing').style.display = 'none';
-                addBubble("⚠️ Помилка: Не вдалося зв'язатися з Python-сервером. Переконайтеся, що файл server.py запущено.", 'ai');
+                addBubble("Помилка: перевір API ключ (рядок 352) або інтернет.", 'ai');
+                console.error(err);
             }
+            
+            const msgsDiv = document.getElementById('chat-msgs');
             msgsDiv.scrollTop = msgsDiv.scrollHeight;
         }
 
