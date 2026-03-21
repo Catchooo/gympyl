@@ -346,6 +346,21 @@
             .desktop-greeting h1 { font-size: 2.5rem; }
             .task-icon { width: 48px; height: 48px; }
         }
+        
+        #ai-status {
+            display: none;
+            padding: 10px 20px;
+            font-size: 13px;
+            color: var(--win-accent);
+            font-weight: 600;
+            animation: pulseStatus 1.5s infinite;
+        }
+        
+        @keyframes pulseStatus {
+            0% { opacity: 0.4; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(5px); }
+            100% { opacity: 0.4; transform: translateX(0); }
+        }
     </style>
 </head>
 <body id="app-shell">
@@ -378,8 +393,12 @@
 
     <script>
         // КОНФІГУРАЦІЯ
+        // --- СЕКЦІЯ НАЛАШТУВАНЬ ---
         const ADMIN_MAIL = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
+        // Твій новий ключ уже тут:
+        const GEMINI_API_KEY = "AIzaSyBy2O499m2bxEZms3sfxekvM2PyhHf0kmQ"; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
@@ -569,46 +588,51 @@
                 if(e.key === 'Enter') askAI();
             });
         }
-
+        
         async function askAI() {
             const input = document.getElementById('ai-input');
             const text = input.value.trim();
             if(!text) return;
-
-            // Додаємо бабл юзера
+            
             appendBubble(text, 'user');
             input.value = '';
             
             const status = document.getElementById('ai-status');
+            const flow = document.getElementById('chat-flow');
+            
             status.style.display = 'block';
-
-            // API КОНФІГ (ВИПРАВЛЕНО)
-            const KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
-            const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
-
+            status.innerText = "Quantum AI обробляє запит...";
+            flow.scrollTop = flow.scrollHeight;
+            
             try {
-                const response = await fetch(ENDPOINT, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ 
-                            parts: [{ text: `Ти - шкільний асистент "Quantum". Користувач питає: ${text}. Відповідай українською, чітко і по суті.` }] 
+                            parts: [{ text: `Ти — асистент. Відповідай чітко, українською, з повагою, але дружньо. Запит: ${text}` }] 
                         }]
                     })
+                
                 });
-
                 const data = await response.json();
                 status.style.display = 'none';
-
-                if(data.candidates && data.candidates[0].content) {
-                    appendBubble(data.candidates[0].content.parts[0].text, 'ai');
+                if (data.candidates && data.candidates[0].content) {
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    appendBubble(aiResponse, 'ai');
+        
                 } else {
-                    throw new Error("API_ERROR");
+                    console.error("API Response Detail:", data);
+                    appendBubble("🔌 Помилка: ШІ отримав пусту відповідь. Можливо, ключ ще активується.", "ai");
+        
                 }
+    
             } catch (err) {
                 status.style.display = 'none';
-                appendBubble("⚠️ Помилка доступу. Можливо, API-ключ заблоковано через публічне використання. Спробуй оновити ключ у налаштуваннях.", 'ai');
+                appendBubble("⚠️ Проблема зі зв'язком. Перевір консоль (F12).", "ai");
+                console.error("Помилка запиту:", err);
             }
+            flow.scrollTop = flow.scrollHeight;
         }
 
         function appendBubble(msg, role) {
