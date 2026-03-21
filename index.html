@@ -375,7 +375,7 @@
 
     <div class="desktop-greeting">
         <h1>Пилиповицька Гімназія</h1>
-        <p style="font-size: 1.2rem; opacity: 0.8; letter-spacing: 1px;"></p>
+        <p id="live-clock" style="font-size: 1.2rem; opacity: 0.8; letter-spacing: 1px;"></p>
     </div>
 
     <div class="signature">Byme</div>
@@ -394,11 +394,9 @@
     <script>
         const ADMIN_MAIL = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
-        // --- БЕЗПЕЧНА КОНФІГУРАЦІЯ ---
-        // Пробуємо дістати ключ з пам'яті браузера
+        
         let GEMINI_API_KEY = localStorage.getItem('my_ai_key');
         
-        // Якщо ключа немає — просимо користувача (тебе) його ввести
         if (!GEMINI_API_KEY) {
             GEMINI_API_KEY = prompt("Введіть ваш Gemini API Key (один раз):");
             if (GEMINI_API_KEY) {
@@ -406,6 +404,7 @@
             }
         }
         
+        // Оновлений URL з версією 1.5 Flash
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const schedule = {
@@ -416,31 +415,38 @@
             5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Математика", "Природа", "Історія", "Математика"] }
         };
 
+        // ПРАВИЛЬНИЙ РОЗКЛАД ДЗВІНКІВ З ФОТО
         const bellTimes = [
-            {s: "08:30", e: "09:15"}, {s: "09:25", e: "10:10"},
-            {s: "10:25", e: "11:10"}, {s: "11:30", e: "12:15"},
-            {s: "12:25", e: "13:10"}, {s: "13:20", e: "14:05"},
-            {s: "14:15", e: "15:00"}
+            {s: "08:30", e: "09:15"}, 
+            {s: "09:25", e: "10:10"},
+            {s: "10:30", e: "11:15"}, 
+            {s: "11:25", e: "12:10"},
+            {s: "12:20", e: "13:05"}, 
+            {s: "13:10", e: "13:55"},
+            {s: "14:00", e: "14:45"},
+            {s: "14:50", e: "15:35"}
         ];
 
-        // УПРАВЛІННЯ ВІКНАМИ
+        // Годинник на головному екрані
+        setInterval(() => {
+            const n = new Date();
+            document.getElementById('live-clock').innerText = n.toLocaleTimeString('uk-UA');
+        }, 1000);
+
         function openApp(id) {
             const overlay = document.getElementById('overlay');
             const win = document.getElementById('win-container');
             const area = document.getElementById('win-render-area');
             const title = document.getElementById('win-title');
             
-            // Скидання станів
             document.querySelectorAll('.task-icon').forEach(el => el.classList.remove('active'));
             document.getElementById('btn-'+id).classList.add('active');
             if(window.appInterval) clearInterval(window.appInterval);
 
-            // Анімація відкриття
             overlay.style.display = 'block';
             document.getElementById('app-shell').classList.add('window-open');
             setTimeout(() => win.classList.add('active'), 10);
 
-            // Вибір додатку
             switch(id) {
                 case 'timer':
                     title.innerText = "Статус занять";
@@ -459,7 +465,7 @@
                     area.innerHTML = fullH;
                     break;
                 case 'ai':
-                    title.innerText = "AI";
+                    title.innerText = "AI Асистент";
                     launchChat(area);
                     break;
             }
@@ -474,7 +480,6 @@
             }, 400);
         }
 
-        // РЕНДЕР РОЗКЛАДУ
         function renderDayUI(dayIdx, isLive) {
             const data = schedule[dayIdx];
             if(!data) return `<div class="lesson-card">Сьогодні вихідний! Відпочивай.</div>`;
@@ -502,7 +507,7 @@
                 <div class="lesson-card ${statusClass}">
                     <div class="lesson-info">
                         <span class="lesson-name">${i+1}. ${name}</span>
-                        <span class="lesson-time">${bellTimes[i] ? bellTimes[i].s : '--:--'}</span>
+                        <span class="lesson-time">${bellTimes[i] ? bellTimes[i].s + ' - ' + bellTimes[i].e : '--:--'}</span>
                     </div>
                     <div class="homework-box">
                         ${isEditMode ? 
@@ -516,13 +521,10 @@
             return html;
         }
 
-        // МОДУЛЬ ТАЙМЕРА (З ФІКСОМ ВИХІДНИХ)
         function startTimerModule(container) {
             function update() {
                 const now = new Date();
                 let day = now.getDay();
-                
-                // ФІКС: Якщо субота (6) або неділя (0), показуємо Понеділок (1)
                 const isWeekend = (day === 0 || day === 6);
                 const activeDay = isWeekend ? 1 : day;
 
@@ -531,14 +533,12 @@
                 let timerHtml = "";
                 let foundAny = false;
 
-                // Перевірка уроків та перерв
                 for(let i=0; i < bellTimes.length; i++) {
                     const b = bellTimes[i];
                     const sMin = parseInt(b.s.split(':')[0])*60 + parseInt(b.s.split(':')[1]);
                     const eMin = parseInt(b.e.split(':')[0])*60 + parseInt(b.e.split(':')[1]);
 
                     if(curMin >= sMin && curMin < eMin) {
-                        // Йде УРОК
                         const remain = eMin - curMin - 1;
                         timerHtml = `
                             <div class="timer-display">
@@ -550,11 +550,10 @@
                     } else if(i < bellTimes.length - 1) {
                         const nextSMin = parseInt(bellTimes[i+1].s.split(':')[0])*60 + parseInt(bellTimes[i+1].s.split(':')[1]);
                         if(curMin >= eMin && curMin < nextSMin) {
-                            // Йде ПЕРЕРВА
                             const remain = nextSMin - curMin - 1;
                             timerHtml = `
                                 <div class="timer-display">
-                                    <div class="timer-status">Велика перерва</div>
+                                    <div class="timer-status">Перерва</div>
                                     <div class="timer-big">${remain}:${(59-curSec).toString().padStart(2,'0')}</div>
                                     <div style="color:#55efc4; font-weight:600;">До наступного уроку</div>
                                 </div>`;
@@ -566,9 +565,9 @@
                 if(!foundAny) {
                     timerHtml = `
                         <div class="timer-display">
-                            <div class="timer-status">${curMin < 510 ? 'Ранок' : 'Навчання завершено'}</div>
+                            <div class="timer-status">${curMin < 510 ? 'Ранок (чекаємо уроків)' : 'Навчання завершено'}</div>
                             <div class="timer-big">--:--</div>
-                            <p style="margin-top:10px; color:#b2bec3;">${isWeekend ? 'Сьогодні вихідний (демо)' : 'Час відпочинку'}</p>
+                            <p style="margin-top:10px; color:#b2bec3;">${isWeekend ? 'Сьогодні вихідний' : 'Час відпочинку'}</p>
                         </div>`;
                 }
 
@@ -578,16 +577,15 @@
             window.appInterval = setInterval(update, 1000);
         }
 
-        // ШІ МОДУЛЬ (З ВИПРАВЛЕНИМ API)
         function launchChat(container) {
             container.innerHTML = `
                 <div class="chat-wrap">
                     <div class="chat-messages" id="chat-flow">
-                        <div class="bubble ai">Привіт! Я твій універсальний ШІ. Ніколи не задавай питання про Юлю Володимирівну! (Тимошенко)</div>
+                        <div class="bubble ai">Привіт! Я твій ШІ-помічник гімназії. Чим можу допомогти?</div>
                     </div>
-                    <div class="typing" id="ai-status">Аналізую запит...</div>
+                    <div class="typing" id="ai-status">ШІ думає...</div>
                     <div class="chat-controls">
-                        <input type="text" class="chat-input" id="ai-input" placeholder="Запитай щось у ШІ...">
+                        <input type="text" class="chat-input" id="ai-input" placeholder="Запитай про розклад або уроки...">
                         <button class="send-btn" onclick="askAI()">➤</button>
                     </div>
                 </div>`;
@@ -609,42 +607,42 @@
             const flow = document.getElementById('chat-flow');
             
             status.style.display = 'block';
-            status.innerText = "Quantum AI обробляє запит...";
             flow.scrollTop = flow.scrollHeight;
             
+            // Формуємо контекст з розкладом
+            const context = `
+                Ти асистент Пилиповицької гімназії. 
+                Розклад дзвінків: 1(08:30-09:15), 2(09:25-10:10), 3(10:30-11:15), 4(11:25-12:10), 5(12:20-13:05), 6(13:10-13:55), 7(14:00-14:45), 8(14:50-15:35).
+                Відповідай українською. Запит користувача: ${text}
+            `;
+
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ 
-                            parts: [{ text: `Ти — асистент. Відповідай чітко, українською, з повагою, але дружньо. Запит: ${text}` }] 
-                        }]
+                        contents: [{ parts: [{ text: context }] }]
                     })
-                
                 });
+
                 const data = await response.json();
                 status.style.display = 'none';
-                if (data.candidates && data.candidates[0].content) {
-                    const aiResponse = data.candidates[0].content.parts[0].text;
-                    appendBubble(aiResponse, 'ai');
-        
+
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                    appendBubble(data.candidates[0].content.parts[0].text, 'ai');
                 } else {
-                    console.error("API Response Detail:", data);
-                    appendBubble("🔌 Помилка: ШІ отримав пусту відповідь. Можливо, ключ ще активується.", "ai");
-        
+                    appendBubble("🔌 Помилка: Невірна відповідь від API. Перевір ключ.", "ai");
                 }
-    
             } catch (err) {
                 status.style.display = 'none';
-                appendBubble("⚠️ Проблема зі зв'язком. Перевір консоль (F12).", "ai");
-                console.error("Помилка запиту:", err);
+                appendBubble("⚠️ Проблема зі зв'язком. Перевір інтернет або API ключ.", "ai");
             }
             flow.scrollTop = flow.scrollHeight;
         }
 
         function appendBubble(msg, role) {
             const flow = document.getElementById('chat-flow');
+            if(!flow) return;
             const div = document.createElement('div');
             div.className = `bubble ${role}`;
             div.innerText = msg;
@@ -652,16 +650,15 @@
             flow.scrollTop = flow.scrollHeight;
         }
 
-        // АДМІНКА
         function adminGate() {
             const p = prompt("Введіть ключ доступу:");
             if(p === ADMIN_MAIL) {
                 isEditMode = true;
                 localStorage.setItem('gym_admin', 'true');
-                alert("Доступ дозволено. Тепер можна редагувати ДЗ прямо в розкладі.");
+                alert("Адмін-режим активовано.");
                 location.reload();
             } else {
-                alert("Відмовлено.");
+                alert("Невірний пароль.");
             }
         }
     </script>
