@@ -53,7 +53,7 @@
         .lesson-passed { border-left-color: var(--color-passed); opacity: 0.7; }
         .lesson-current { border-left-color: var(--win-accent); transform: scale(1.02); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        .timer-big { font-size: clamp(48px, 15vw, 72px); text-align: center; font-weight: 100; color: var(--win-accent); margin: 30px 0 10px; }
+        .timer-big { font-size: clamp(40px, 12vw, 60px); text-align: center; font-weight: 100; color: var(--win-accent); margin: 20px 0 5px; }
         .signature { position: absolute; bottom: 15px; right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 13px; }
 
         @media (max-width: 768px) {
@@ -95,11 +95,11 @@
         let isAdmin = localStorage.getItem('school_admin') === 'true';
 
         const schedule = {
-            1: { lessons: ["Українська мова", "Математика", "Математика", "Укр. літ.", "Мистецтво", "Географія"], name: "Понеділок" },
-            2: { lessons: ["Фізкультура", "Англійська", "Історія", "Англійська", "Зарубіжна", "Інформатика"], name: "Вівторок" },
-            3: { lessons: ["Українська мова", "Укр. літ.", "Технології", "Технології", "Математика", "Музика"], name: "Середа" },
-            4: { lessons: ["Англійська", "Українська", "Українська", "Зарубіжна", "Фізкультура", "Англійська"], name: "Четвер" },
-            5: { lessons: ["Основи здоров'я", "Математика", "Природа", "Історія", "Математика"], name: "П'ятниця" }
+            1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
+            2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
+            3: { name: "Середа", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
+            4: { name: "Четвер", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
+            5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Основи здоров’я", "Математика", "Природа", "Історія", "Математика"] }
         };
 
         const bells = [
@@ -134,7 +134,7 @@
                 let nextDay = (d >= 5 || d === 0) ? 1 : d + 1;
                 body.innerHTML = renderDay(nextDay, false);
             }
-            else { 
+            else if(app === 'full') { 
                 title.innerText = "Тиждень"; 
                 let h = ""; for(let i=1; i<=5; i++) h += renderDay(i, false);
                 body.innerHTML = h;
@@ -157,11 +157,11 @@
             const curMin = now.getHours() * 60 + now.getMinutes();
             const isToday = now.getDay() === parseInt(dayId);
 
-            let html = `<h3 style="margin: 15px 0 10px; color: var(--win-accent);">${data.name}</h3>`;
+            let html = `<h3 style="margin: 20px 0 10px; color: var(--win-accent); border-bottom: 2px solid #ddd; padding-bottom:5px;">${data.name}</h3>`;
             
             data.lessons.forEach((l, i) => {
                 let statusClass = "";
-                if(isToday && checkStatus) {
+                if(isToday && checkStatus && bells[i]) {
                     const sm = parseInt(bells[i].s.split(':')[0])*60 + parseInt(bells[i].s.split(':')[1]);
                     const em = parseInt(bells[i].e.split(':')[0])*60 + parseInt(bells[i].e.split(':')[1]);
                     if (curMin >= em) statusClass = "lesson-passed";
@@ -182,44 +182,57 @@
             const body = document.getElementById('win-body');
             function update() {
                 const now = new Date();
-                let today = now.getDay();
-                const cur = now.getHours()*60 + now.getMinutes();
-                const sec = 60 - now.getSeconds();
-                let content = "";
+                const day = now.getDay(); // 0-нд, 1-пн... 6-сб
+                const curMin = now.getHours() * 60 + now.getMinutes();
+                const curSec = now.getSeconds();
+                
+                let timerHtml = "";
+                let displayDay = day;
 
-                // Якщо вихідний, просто показуємо розклад на понеділок і кажемо відпочивати
-                if (today === 0 || today === 6) {
-                    content = `<div style="text-align:center; padding:20px 0;"><h3>Сьогодні вихідний!</h3><p>Уроків немає, відпочивай.</p></div><hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">` + renderDay(1, false);
-                } else {
+                const firstLessonStart = 8 * 60 + 30;
+                const lastLessonEnd = 15 * 60 + 0;
+
+                // Перевірка: чи зараз навчальний час (Пн-Пт, 08:30-15:00)
+                if (day >= 1 && day <= 5 && curMin >= firstLessonStart && curMin < lastLessonEnd) {
                     let found = false;
-                    const lastBell = parseInt(bells[bells.length-1].e.split(':')[0])*60 + parseInt(bells[bells.length-1].e.split(':')[1]);
-
-                    if (cur >= lastBell) {
-                        content = `<div style="text-align:center; padding:40px 0;"><h3>Уроків вже немає</h3><p>Відпочивай!</p></div>`;
-                    } else {
-                        bells.forEach((b, i) => {
-                            const sm = parseInt(b.s.split(':')[0])*60 + parseInt(b.s.split(':')[1]);
-                            const em = parseInt(b.e.split(':')[0])*60 + parseInt(b.e.split(':')[1]);
-                            if(cur >= sm && cur < em) {
-                                content = `<div class="timer-big">${em - cur - 1}:${sec < 10 ? '0'+sec : sec}</div><p style="text-align:center">До кінця ${i+1}-го уроку</p>`;
+                    bells.forEach((b, i) => {
+                        const sm = parseInt(b.s.split(':')[0])*60 + parseInt(b.s.split(':')[1]);
+                        const em = parseInt(b.e.split(':')[0])*60 + parseInt(b.e.split(':')[1]);
+                        
+                        if (curMin >= sm && curMin < em) {
+                            timerHtml = `<div class="timer-big">${em - curMin - 1}:${(60-curSec).toString().padStart(2,'0')}</div><p style="text-align:center">До кінця ${i+1} уроку</p>`;
+                            found = true;
+                        } else if (i < bells.length - 1) {
+                            const nextSm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
+                            if (curMin >= em && curMin < nextSm) {
+                                timerHtml = `<div class="timer-big">${nextSm - curMin - 1}:${(60-curSec).toString().padStart(2,'0')}</div><p style="text-align:center">До кінця перерви</p>`;
                                 found = true;
-                            } else if (i < bells.length - 1) {
-                                const nextSm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
-                                if (cur >= em && cur < nextSm) {
-                                    content = `<div class="timer-big">${nextSm - cur - 1}:${sec < 10 ? '0'+sec : sec}</div><p style="text-align:center">До кінця перерви</p>`;
-                                    found = true;
-                                }
                             }
-                        });
-                        if (!found && cur < parseInt(bells[0].s.split(':')[0])*60 + parseInt(bells[0].s.split(':')[1])) {
-                             const fSm = parseInt(bells[0].s.split(':')[0])*60 + parseInt(bells[0].s.split(':')[1]);
-                             content = `<div class="timer-big">${fSm - cur - 1}:${sec < 10 ? '0'+sec : sec}</div><p style="text-align:center">До початку занять</p>`;
-                             found = true;
                         }
-                    }
-                    content += `<hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">` + renderDay(today, true);
+                    });
+                    if(!found) timerHtml = `<div class="timer-big">--:--</div><p style="text-align:center">Уроків немає</p>`;
+                } else {
+                    // ЧАС ПОЗА ШКОЛОЮ (ніч або вихідні)
+                    let target = new Date();
+                    target.setSeconds(0); target.setMinutes(30); target.setHours(8);
+
+                    if (day === 0) target.setDate(now.getDate() + 1); // Нд -> Пн
+                    else if (day === 6) target.setDate(now.getDate() + 2); // Сб -> Пн
+                    else if (day >= 1 && day <= 5 && curMin >= lastLessonEnd) target.setDate(now.getDate() + 1); // Вечір будня -> Завтра
+                    
+                    if (target.getDay() === 6) target.setDate(target.getDate() + 2); // Якщо випало на Сб
+                    if (target.getDay() === 0) target.setDate(target.getDate() + 1); // Якщо випало на Нд
+
+                    const diffMs = target - now;
+                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffMins = Math.floor((diffMs / (1000 * 60)) % 60);
+                    const diffSecs = Math.floor((diffMs / 1000) % 60);
+
+                    timerHtml = `<div class="timer-big" style="font-size:35px">${diffHrs}г ${diffMins}хв ${diffSecs}с</div><p style="text-align:center">До початку занять у Понеділок</p>`;
+                    displayDay = 1; // У вихідні показуємо розклад на понеділок
                 }
-                body.innerHTML = content;
+
+                body.innerHTML = timerHtml + `<hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">` + renderDay(displayDay === 0 || displayDay === 6 ? 1 : displayDay, (day >= 1 && day <= 5));
             }
             update();
             timerTick = setInterval(update, 1000);
