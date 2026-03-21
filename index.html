@@ -29,7 +29,7 @@
         }
 
         body {
-            background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            background: url('https://kokl.ua/wp-content/uploads/2025/10/ostriv-epshtejna-scaled.jpg') center/cover no-repeat fixed;
             height: 100vh;
             display: flex;
             overflow: hidden;
@@ -375,10 +375,10 @@
 
     <div class="desktop-greeting">
         <h1>Пилиповицька Гімназія</h1>
-        <p style="font-size: 1.2rem; opacity: 0.8; letter-spacing: 1px;">Цифрова екосистема навчання</p>
+        <p style="font-size: 1.2rem; opacity: 0.8; letter-spacing: 1px;"></p>
     </div>
 
-    <div class="signature">Byme OS v2.0</div>
+    <div class="signature">Byme</div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
         <div class="window-content" id="win-container" onclick="event.stopPropagation()">
@@ -392,13 +392,10 @@
     </div>
 
     <script>
-        // КОНФІГУРАЦІЯ
-        // --- СЕКЦІЯ НАЛАШТУВАНЬ ---
         const ADMIN_MAIL = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
-        // Твій новий ключ уже тут:
         const GEMINI_API_KEY = "AIzaSyBy2O499m2bxEZms3sfxekvM2PyhHf0kmQ"; 
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
@@ -451,7 +448,7 @@
                     area.innerHTML = fullH;
                     break;
                 case 'ai':
-                    title.innerText = "Quantum AI";
+                    title.innerText = "AI";
                     launchChat(area);
                     break;
             }
@@ -575,9 +572,9 @@
             container.innerHTML = `
                 <div class="chat-wrap">
                     <div class="chat-messages" id="chat-flow">
-                        <div class="bubble ai">Привіт! Я твій універсальний ШІ. Можеш питати мене про все на світі: від розкладу до того, як працює квантовий комп'ютер. Я спробую розібратися!</div>
+                        <div class="bubble ai">Привіт! Я твій універсальний ШІ. Ніколи не задавай питання про Юлю Володимирівну! (Тимошенко)</div>
                     </div>
-                    <div class="typing" id="ai-status">Quantum Gemini аналізує запит...</div>
+                    <div class="typing" id="ai-status">Аналізую запит...</div>
                     <div class="chat-controls">
                         <input type="text" class="chat-input" id="ai-input" placeholder="Запитай щось у ШІ...">
                         <button class="send-btn" onclick="askAI()">➤</button>
