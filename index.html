@@ -410,63 +410,74 @@
         }
 
         // --- AI ENGINE ---
+// Додаємо бібліотеку Google AI прямо в скрипт
+        const script = document.createElement('script');
+        script.type = 'importmap';
+        script.innerHTML = JSON.stringify({
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        });
+        document.head.appendChild(script);
+
+// --- ОНОВЛЕНИЙ AI ENGINE ---
         function initChat(container) {
             container.innerHTML = `
-                <div class="chat-container">
-                    <div class="chat-messages" id="chat-msgs">
-                        <div class="msg ai">Привіт! Твій ключ підключено. Запитуй будь-що!</div>
-                    </div>
-                    <div class="typing-indicator" id="ai-typing">Думаю...</div>
-                    <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Запитання...">
-                        <button class="send-btn" onclick="processChat()">➤</button>
-                    </div>
-                </div>`;
-            document.getElementById('chat-in').focus();
-            document.getElementById('chat-in').addEventListener('keypress', (e) => e.key === 'Enter' && processChat());
+            <div class="chat-container">
+            <div class="chat-messages" id="chat-msgs">
+            <div class="msg ai">Привіт! Я оновив протокол зв'язку. Спробуй написати зараз.</div>
+            </div>
+            <div class="typing-indicator" id="ai-typing">Gemini роздумує...</div>
+            <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-in" placeholder="Запитання до ШІ...">
+            <button class="send-btn" onclick="processChat()">➤</button>
+                </div>
+        </div>`;
+    document.getElementById('chat-in').focus();
         }
 
-        async function processChat() {
-            const input = document.getElementById('chat-in');
-            const msg = input.value.trim();
-            if(!msg) return;
+async function processChat() {
+    const input = document.getElementById('chat-in');
+    const msg = input.value.trim();
+    if(!msg) return;
 
-            addBubble(msg, 'user');
-            input.value = '';
-            document.getElementById('ai-typing').style.display = 'block';
-            
-            const msgsDiv = document.getElementById('chat-msgs');
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
+    addBubble(msg, 'user');
+    input.value = '';
+    document.getElementById('ai-typing').style.display = 'block';
+    
+    const msgsDiv = document.getElementById('chat-msgs');
+    msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-            const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // Твій ключ
+    const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Ти асистент Пилиповицької гімназії. Відповідай українською мовою. Питання: ${msg}` }] }]
-                    })
-                });
-                
-                const data = await response.json();
-                const aiReply = data.candidates[0].content.parts[0].text;
-                document.getElementById('ai-typing').style.display = 'none';
-                addBubble(aiReply, 'ai');
-            } catch (err) {
-                document.getElementById('ai-typing').style.display = 'none';
-                addBubble("⚠️ Помилка ключа або лімітів. Перевір консоль.", 'ai');
-            }
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
+    try {
+        // Імпортуємо модуль на льоту
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const result = await model.generateContent(`Ти асистент Пилиповицької гімназії. Відповідай коротко і тільки українською. Питання: ${msg}`);
+        const response = await result.response;
+        const text = response.text();
+
+        document.getElementById('ai-typing').style.display = 'none';
+        addBubble(text, 'ai');
+    } catch (err) {
+        console.error(err);
+        document.getElementById('ai-typing').style.display = 'none';
+        
+        // Перевірка конкретних помилок
+        if (err.message.includes('API_KEY_INVALID')) {
+            addBubble("❌ Ключ недійсний. Перевір його в Google AI Studio.", 'ai');
+        } else if (err.message.includes('SAFETY')) {
+            addBubble("⚠️ ШІ заблокував відповідь через цензуру.", 'ai');
+        } else {
+            addBubble("⚠️ Помилка доступу. Google блокує прямий запит з браузера. Треба або проксі, або Python-сервер.", 'ai');
         }
-
-        function addBubble(text, type) {
-            const div = document.createElement('div');
-            div.className = `msg ${type}`;
-            div.innerText = text;
-            document.getElementById('chat-msgs').appendChild(div);
-        }
+    }
+    msgsDiv.scrollTop = msgsDiv.scrollHeight;
+}
     </script>
 </body>
 </html>
