@@ -180,6 +180,7 @@
             line-height: 1.5;
             animation: msgFade 0.3s ease;
             position: relative;
+            white-space: pre-wrap;
         }
 
         @keyframes msgFade { from { opacity: 0; transform: translateY(10px); } }
@@ -260,7 +261,7 @@
         <p style="font-size: 1.2rem; opacity: 0.9;">Education Management System</p>
     </div>
 
-    <div class="signature">Byme © 2024</div>
+    <div class="signature">Byme © 2026</div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
         <div class="window-content" id="win" onclick="event.stopPropagation()">
@@ -296,6 +297,7 @@
             if(m === ADMIN_EMAIL) {
                 isAdmin = true;
                 localStorage.setItem('is_admin', 'true');
+                alert("Доступ дозволено.");
                 location.reload();
             }
         }
@@ -326,7 +328,7 @@
                 body.innerHTML = h;
             }
             else if(app === 'ai') {
-                title.innerText = "Gemini AI";
+                title.innerText = "Quantum Gemini";
                 initChat(body);
             }
         }
@@ -360,9 +362,10 @@
                     <div class="lesson-card ${state}">
                         <div style="display:flex; justify-content:space-between;">
                             <strong>${i+1}. ${l}</strong>
+                            <small style="color:#888;">${bells[i] ? bells[i].s : ''}</small>
                         </div>
                         <div style="margin-top:8px; font-size:13px; color:#636e72;">
-                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:2px;">` : `📝 ${homework}`}
+                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:4px;">` : `📝 ${homework}`}
                         </div>
                     </div>`;
             });
@@ -378,7 +381,7 @@
                 const curM = now.getHours()*60 + now.getMinutes();
                 const curS = now.getSeconds();
                 let topHtml = "";
-                let isOff = (day === 0 || day === 6 || curM > 15*60);
+                let isOff = (day === 0 || day === 6 || curM > 15*60 || curM < 8*60+30);
 
                 if(!isOff) {
                     let found = false;
@@ -391,34 +394,35 @@
                         } else if(i < bells.length-1) {
                             const nsm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
                             if(curM >= em && curM < nsm) {
-                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва</p>`;
+                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва!</p>`;
                                 found = true;
                             }
                         }
                     });
                     if(!found) topHtml = "<h3>Заняття закінчились</h3>";
                 } else {
-                    topHtml = "<div class='timer-big'>Відпочинок</div>";
+                    topHtml = "<div class='timer-big' style='font-size:24px;'>Уроків немає</div><p style='text-align:center'>Відпочивай!</p>";
                 }
-                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.1;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
+                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.2;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
             }
             refresh();
             timerInterval = setInterval(refresh, 1000);
         }
 
-        // --- THE AI CHAT ENGINE ---
+        // --- AI ENGINE ---
         function initChat(container) {
             container.innerHTML = `
                 <div class="chat-container">
                     <div class="chat-messages" id="chat-msgs">
-                        <div class="msg ai">Привіт! Я твій Gemini-асистент. Запитуй будь-що!</div>
+                        <div class="msg ai">Привіт! Твій ключ підключено. Запитуй будь-що!</div>
                     </div>
-                    <div class="typing-indicator" id="ai-typing">ШІ генерує відповідь...</div>
+                    <div class="typing-indicator" id="ai-typing">Думаю...</div>
                     <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Ваше запитання...">
+                        <input type="text" class="chat-input" id="chat-in" placeholder="Запитання...">
                         <button class="send-btn" onclick="processChat()">➤</button>
                     </div>
                 </div>`;
+            document.getElementById('chat-in').focus();
             document.getElementById('chat-in').addEventListener('keypress', (e) => e.key === 'Enter' && processChat());
         }
 
@@ -430,8 +434,10 @@
             addBubble(msg, 'user');
             input.value = '';
             document.getElementById('ai-typing').style.display = 'block';
+            
+            const msgsDiv = document.getElementById('chat-msgs');
+            msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-            // ВСТАВ СВІЙ API KEY НИЖЧЕ!
             const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
             const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
@@ -440,22 +446,18 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Ти асистент Пилиповицької гімназії. Відповідай коротко. Питання: ${msg}` }] }]
+                        contents: [{ parts: [{ text: `Ти асистент Пилиповицької гімназії. Відповідай українською мовою. Питання: ${msg}` }] }]
                     })
                 });
-
+                
                 const data = await response.json();
                 const aiReply = data.candidates[0].content.parts[0].text;
-                
                 document.getElementById('ai-typing').style.display = 'none';
                 addBubble(aiReply, 'ai');
             } catch (err) {
                 document.getElementById('ai-typing').style.display = 'none';
-                addBubble("Помилка: перевір API ключ (рядок 352) або інтернет.", 'ai');
-                console.error(err);
+                addBubble("⚠️ Помилка ключа або лімітів. Перевір консоль.", 'ai');
             }
-            
-            const msgsDiv = document.getElementById('chat-msgs');
             msgsDiv.scrollTop = msgsDiv.scrollHeight;
         }
 
