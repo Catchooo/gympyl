@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Пилиповицька Гімназія</title>
+    <title>Пилиповицька Гімназія | Платформа</title>
     <style>
         :root {
             --win-bg: #2c3e50;
             --win-accent: #6c5ce7;
-            --taskbar-bg: rgba(0, 0, 0, 0.85);
+            --taskbar-bg: rgba(0, 0, 0, 0.9);
             --text-light: #ffffff;
             --main-font: 'Segoe UI', system-ui, -apple-system, sans-serif;
             --color-passed: #95a5a6; 
@@ -237,7 +237,6 @@
             display: none;
         }
 
-        /* Mobile adaptation */
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
             .taskbar { width: 100%; height: 75px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid rgba(255,255,255,0.1); }
@@ -277,7 +276,6 @@
         const ADMIN_EMAIL = "br.m.airways@gmail.com";
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
-        // ПОВНИЙ РОЗКЛАД
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
             2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
@@ -292,16 +290,6 @@
             {s: "12:25", e: "13:10"}, {s: "13:20", e: "14:05"},
             {s: "14:15", e: "15:00"}
         ];
-
-        function adminLogin() {
-            const m = prompt("Email адміністратора:");
-            if(m === ADMIN_EMAIL) {
-                isAdmin = true;
-                localStorage.setItem('is_admin', 'true');
-                alert("Доступ дозволено.");
-                location.reload();
-            }
-        }
 
         function openApp(app) {
             const overlay = document.getElementById('overlay');
@@ -329,13 +317,13 @@
                 body.innerHTML = h;
             }
             else if(app === 'ai') {
-                title.innerText = "Quantum Gemini";
+                title.innerText = "Gemini AI";
                 initChat(body);
             }
         }
 
         function closeApp() {
-            if(timerInterval) clearInterval(timerInterval);
+            if(window.timerInterval) clearInterval(window.timerInterval);
             document.getElementById('win').classList.remove('active');
             setTimeout(() => {
                 document.getElementById('overlay').style.display = 'none';
@@ -345,7 +333,7 @@
 
         function drawDay(dayId, liveMode) {
             const data = schedule[dayId];
-            if(!data) return "<p>Сьогодні вихідний!</p>";
+            if(!data) return "<p style='padding:10px;'>Сьогодні вихідний!</p>";
             const now = new Date();
             const curM = now.getHours() * 60 + now.getMinutes();
 
@@ -363,17 +351,15 @@
                     <div class="lesson-card ${state}">
                         <div style="display:flex; justify-content:space-between;">
                             <strong>${i+1}. ${l}</strong>
-                            <small style="color:#888;">${bells[i] ? bells[i].s : ''}</small>
                         </div>
                         <div style="margin-top:8px; font-size:13px; color:#636e72;">
-                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:4px;">` : `📝 ${homework}`}
+                            ${isAdmin ? `<input type="text" value="${homework==='Немає завдань'?'':homework}" onchange="localStorage.setItem('hw_${l}', this.value)" style="width:100%; border:1px solid #ddd; padding:4px;">` : `📝 ${homework}`}
                         </div>
                     </div>`;
             });
             return html;
         }
 
-        let timerInterval;
         function runTimerApp() {
             const body = document.getElementById('win-body');
             function refresh() {
@@ -382,7 +368,7 @@
                 const curM = now.getHours()*60 + now.getMinutes();
                 const curS = now.getSeconds();
                 let topHtml = "";
-                let isOff = (day === 0 || day === 6 || curM > 15*60 || curM < 8*60+30);
+                let isOff = (day === 0 || day === 6 || curM > 15*60);
 
                 if(!isOff) {
                     let found = false;
@@ -395,35 +381,34 @@
                         } else if(i < bells.length-1) {
                             const nsm = parseInt(bells[i+1].s.split(':')[0])*60 + parseInt(bells[i+1].s.split(':')[1]);
                             if(curM >= em && curM < nsm) {
-                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва!</p>`;
+                                topHtml = `<div class="timer-big">${nsm-curM-1}:${(60-curS).toString().padStart(2,'0')}</div><p style="text-align:center">Перерва</p>`;
                                 found = true;
                             }
                         }
                     });
                     if(!found) topHtml = "<h3>Заняття закінчились</h3>";
                 } else {
-                    topHtml = "<div class='timer-big' style='font-size:24px;'>Уроків немає</div><p style='text-align:center'>Відпочивай!</p>";
+                    topHtml = "<div class='timer-big'>Відпочинок</div>";
                 }
-                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.2;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
+                body.innerHTML = topHtml + "<hr style='margin:20px 0; opacity:0.1;'>" + drawDay(day === 0 || day === 6 ? 1 : day, true);
             }
             refresh();
-            timerInterval = setInterval(refresh, 1000);
+            window.timerInterval = setInterval(refresh, 1000);
         }
 
-        // --- AI ENGINE ---
+        // --- AI CHAT SYSTEM ---
         function initChat(container) {
             container.innerHTML = `
                 <div class="chat-container">
                     <div class="chat-messages" id="chat-msgs">
-                        <div class="msg ai">Я знову в строю! Твій ключ прописаний. Про що поговоримо?</div>
+                        <div class="msg ai">Привіт! Я твій універсальний ШІ. Можеш питати мене про все на світі: від розкладу до того, як працює квантовий комп'ютер. Я спробую розібратися!</div>
                     </div>
-                    <div class="typing-indicator" id="ai-typing" style="display:none; padding:10px; color:#888;">Gemini генерує відповідь...</div>
+                    <div class="typing-indicator" id="ai-typing">Думаю...</div>
                     <div class="chat-input-area">
-                        <input type="text" class="chat-input" id="chat-in" placeholder="Напиши повідомлення...">
+                        <input type="text" class="chat-input" id="chat-in" placeholder="Напишіть повідомлення...">
                         <button class="send-btn" onclick="processChat()">➤</button>
                     </div>
                 </div>`;
-            document.getElementById('chat-in').focus();
             document.getElementById('chat-in').addEventListener('keypress', (e) => e.key === 'Enter' && processChat());
         }
 
@@ -435,36 +420,35 @@
             addBubble(msg, 'user');
             input.value = '';
             document.getElementById('ai-typing').style.display = 'block';
-            
-            const msgsDiv = document.getElementById('chat-msgs');
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
             const API_KEY = "AIzaSyCbM6g_Lgy9VSofcAtPkKTdyIh9T0M5suA"; 
             const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
             try {
                 const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Ти асистент Пилиповицької гімназії. Відповідай українською мовою. Питання: ${msg}` }] }]
+                        contents: [{ parts: [{ text: `Ти корисний асистент. Давай чіткі відповіді українською мовою. Питання: ${msg}` }] }]
                     })
                 });
-                
+
                 const data = await response.json();
                 
-                if(data.candidates && data.candidates[0].content) {
+                if (data.candidates && data.candidates[0].content) {
                     const aiReply = data.candidates[0].content.parts[0].text;
                     document.getElementById('ai-typing').style.display = 'none';
                     addBubble(aiReply, 'ai');
                 } else {
-                    throw new Error("Невірна відповідь API");
+                    throw new Error("Невірна структура відповіді");
                 }
             } catch (err) {
-                console.error(err);
                 document.getElementById('ai-typing').style.display = 'none';
-                addBubble("⚠️ Помилка! Перевір API ключ (AI Studio) або чи не блокує браузер прямі запити (CORS).", 'ai');
+                addBubble("Вибач, сталася помилка з'єднання. Перевір консоль (F12) або ключ.", 'ai');
+                console.error("API Error:", err);
             }
+            
+            const msgsDiv = document.getElementById('chat-msgs');
             msgsDiv.scrollTop = msgsDiv.scrollHeight;
         }
 
@@ -473,6 +457,11 @@
             div.className = `msg ${type}`;
             div.innerText = text;
             document.getElementById('chat-msgs').appendChild(div);
+        }
+
+        function adminLogin() {
+            const m = prompt("Email:");
+            if(m === ADMIN_EMAIL) { isAdmin = true; localStorage.setItem('is_admin', 'true'); location.reload(); }
         }
     </script>
 </body>
