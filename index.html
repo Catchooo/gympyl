@@ -527,72 +527,6 @@
             window.appInterval = setInterval(update, 1000);
         }
 
-        // --- AI LOGIC (ФІКС 404) ---
-        function launchChat(container) {
-            container.innerHTML = `
-                <div class="chat-wrap">
-                    <div class="chat-messages" id="chat-flow"><div class="bubble ai">Вітаю! Я - розумний ШІ від Google. Можеш запитати мене про будь - що: від квантового комп'ютера, до закатки в погрибі.</div></div>
-                    <div id="ai-status">ШІ думає...</div>
-                    <div class="chat-controls">
-                        <input type="text" class="chat-input" id="ai-input" placeholder="Які уроки у середу?">
-                        <button class="send-btn" onclick="askAI()">➤</button>
-                    </div>
-                </div>`;
-            setTimeout(() => document.getElementById('ai-input').focus(), 100);
-            document.getElementById('ai-input').addEventListener('keypress', e => e.key==='Enter' && askAI());
-        }
-
-        async function askAI() {
-            const inp = document.getElementById('ai-input');
-            const text = inp.value.trim();
-            if(!text) return;
-            
-            // Жорстка перевірка ключа ПЕРЕД запитом
-            const apiKey = getApiKey();
-            if(!apiKey) {
-                appendBubble("⚠️ Ключ не знайдено!", 'ai');
-                return; 
-            }
-            appendBubble(text, 'user');
-            inp.value = '';
-            const status = document.getElementById('ai-status');
-            status.style.display = 'block';
-
-            const context = `Ти асистент Пилиповицької гімназії. Розклад уроків: ${JSON.stringify(schedule)}. Дзвінки: 1(08:30-09:15), 2(09:25-10:10), 3(10:30-11:15), 4(11:25-12:10), 5(12:20-13:05), 6(13:10-13:55), 7(14:00-14:45), 8(14:50-15:35). Сьогодні ${new Date().toLocaleDateString('uk-UA',{weekday:'long'})}. Відповідай українською мовою, дуже коротко. Запит: ${text}`;
-
-            try {
-                const res = await fetch(getApiUrl(), {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: context }] }] })
-                });
-                
-                const data = await res.json();
-                status.style.display = 'none';
-                
-                if (data.error) {
-                    appendBubble("🔌 Помилка API: " + data.error.message, 'ai');
-                    return;
-                }
-                
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "🔌 Помилка: Сервер не надав відповіді.";
-                appendBubble(reply, 'ai');
-            } catch(e) {
-                status.style.display = 'none';
-                appendBubble("⚠️ Помилка з'єднання.", 'ai');
-            }
-        }
-
-        function appendBubble(msg, role) {
-            const flow = document.getElementById('chat-flow');
-            if(!flow) return;
-            const div = document.createElement('div');
-            div.className = `bubble ${role}`;
-            div.innerHTML = msg.replace(/\n/g, '<br>');
-            flow.appendChild(div);
-            flow.scrollTop = flow.scrollHeight;
-        }
-
         // --- АДМІНКА ТА НАЛАШТУВАННЯ КЛЮЧА ---
         function adminGate() {
             const p = prompt("Адмін-пароль АБО новий API Key (починається з AIza...):");
@@ -611,6 +545,7 @@
                 alert("Невірний ввід.");
             }
         }
+        <script src="ai.js"></script>
     </script>
 </body>
 </html>
