@@ -416,7 +416,6 @@
                             bellSound.play(); 
                             lastState = "L" + i; 
                         }
-                        }
                         timerHtml = renderTimerUI("До кінця уроку", e - curSec, "#3498db");
                         found = true; break;
                     } else if (i < bellTimes.length - 1) {
@@ -424,12 +423,13 @@
                         const ns = nsh*3600 + nsm*60;
                         if(curSec >= e && curSec < ns) {
                             timerHtml = renderTimerUI("До початку уроку", ns - curSec, "#2ecc71");
+                            if (lastState && !lastState.startsWith("B")) lastState = "B" + i;
                             found = true; break;
                         }
                     }
                 }
                 if(!found) timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
-            lastState = "off"; // Зміни ТУТ, щоб не скидало в null кожну секунду
+                lastState = "off"; // Зміни ТУТ, щоб не скидало в null кожну секунду
                 container.innerHTML = timerHtml + renderDayUI(activeDay, true);
             };
             update(); window.appInterval = setInterval(update, 1000);
