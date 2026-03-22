@@ -287,6 +287,10 @@
         // --- ДАНІ ТА НАЛАШТУВАННЯ ---
         const ADMIN_PASS = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
+        const bellSound = new Audio('bell.mp3'); // Переконайся, що назва файлу збігається
+        let lastState = null; // Для відстеження зміни статусу (урок/перерва)
+        const bellSound = new Audio('GO.mp3'); 
+        let lastState = null;
 
         const schedule = {
             1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
@@ -410,6 +414,10 @@
                     const s = sh*3600 + sm*60, e = eh*3600 + em*60;
 
                     if(curSec >= s && curSec < e) {
+                        if (lastState !== i) { // Якщо номер уроку змінився (настав новий)
+                            bellSound.play().catch(e => console.log("Чекаю взаємодії з екраном для звуку"));
+                            lastState = i;
+                        }
                         timerHtml = renderTimerUI("До кінця уроку", e - curSec, "#3498db");
                         found = true; break;
                     } else if (i < bellTimes.length - 1) {
@@ -422,6 +430,7 @@
                     }
                 }
                 if(!found) timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
+                lastState = null;
                 container.innerHTML = timerHtml + renderDayUI(activeDay, true);
             };
             update(); window.appInterval = setInterval(update, 1000);
