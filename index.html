@@ -320,7 +320,7 @@
         <p id="live-clock"></p>
     </div>
 
-    <div class="signature">Byme smart system v2.2</div>
+    <div class="signature">Byme</div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
         <div class="window-content" id="win-container" onclick="event.stopPropagation()">
@@ -343,8 +343,7 @@
 
         // Динамічні функції для отримання ключа (щоб не було 404)
         const getApiKey = () => localStorage.getItem('my_ai_key') || "";
-        const getApiUrl = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getApiKey()}`;
-
+        const getApiUrl = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${getApiKey()}`;
         // --- ДАНІ ---
         const ADMIN_PASS = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
@@ -532,7 +531,7 @@
         function launchChat(container) {
             container.innerHTML = `
                 <div class="chat-wrap">
-                    <div class="chat-messages" id="chat-flow"><div class="bubble ai">Вітаю! Я ШІ гімназії. Натисни "🔑" внизу панелі, щоб налаштувати ключ, якщо я не відповідаю.</div></div>
+                    <div class="chat-messages" id="chat-flow"><div class="bubble ai">Вітаю! Я - розумний ШІ від Google. Можеш запитати мене про будь - що: від квантового комп'ютера, до закатки в погрибі.</div></div>
                     <div id="ai-status">ШІ думає...</div>
                     <div class="chat-controls">
                         <input type="text" class="chat-input" id="ai-input" placeholder="Які уроки у середу?">
@@ -551,10 +550,9 @@
             // Жорстка перевірка ключа ПЕРЕД запитом
             const apiKey = getApiKey();
             if(!apiKey) {
-                appendBubble("⚠️ Помилка: API ключ не знайдено! Додай ?key=... в URL або натисни на 🔑 зліва внизу.", 'ai');
-                return; // Зупиняємо функцію, щоб не було 404 помилки в консолі
+                appendBubble("⚠️ Ключ не знайдено!", 'ai');
+                return; 
             }
-
             appendBubble(text, 'user');
             inp.value = '';
             const status = document.getElementById('ai-status');
@@ -581,7 +579,7 @@
                 appendBubble(reply, 'ai');
             } catch(e) {
                 status.style.display = 'none';
-                appendBubble("⚠️ Помилка з'єднання. Перевір інтернет або правильність API-ключа.", 'ai');
+                appendBubble("⚠️ Помилка з'єднання.", 'ai');
             }
         }
 
