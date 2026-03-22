@@ -412,9 +412,10 @@
                     const s = sh*3600 + sm*60, e = eh*3600 + em*60;
 
                     if(curSec >= s && curSec < e) {
-                        if (lastState !== i) { // Якщо номер уроку змінився (настав новий)
-                            bellSound.play().catch(e => console.log("Чекаю взаємодії з екраном для звуку"));
-                            lastState = i;
+                        if (lastState !== "L" + i) { 
+                            bellSound.play(); 
+                            lastState = "L" + i; 
+                        }
                         }
                         timerHtml = renderTimerUI("До кінця уроку", e - curSec, "#3498db");
                         found = true; break;
@@ -428,7 +429,7 @@
                     }
                 }
                 if(!found) timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
-                lastState = null;
+            lastState = "off"; // Зміни ТУТ, щоб не скидало в null кожну секунду
                 container.innerHTML = timerHtml + renderDayUI(activeDay, true);
             };
             update(); window.appInterval = setInterval(update, 1000);
