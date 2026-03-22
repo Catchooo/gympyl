@@ -428,24 +428,23 @@
                         }
                     }
                 }
-                if(!found) timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
-                lastState = "off"; // Зміни ТУТ, щоб не скидало в null кожну секунду
+                if(!found) {
+                    timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
+                    lastState = "off"; 
+                }
                 container.innerHTML = timerHtml + renderDayUI(activeDay, true);
-            };
-            update(); window.appInterval = setInterval(update, 1000);
-        }
-
-        function renderTimerUI(status, sec, col) {
-            let time = "--:--";
-            if(sec !== null) {
-                const m = Math.floor(sec/60), s = sec%60;
-                time = `${m}:${s.toString().padStart(2,'0')}`;
-            }
-            return `<div class="timer-display">
-                        <div class="timer-status">${status}</div>
-                        <div class="timer-big" style="color:${col}">${time}</div>
+                
+                function renderTimerUI(status, sec, col) {
+                    let time = "--:--";
+                    if(sec !== null) {
+                        const m = Math.floor(sec/60), s = sec%60;
+                        time = `${m}:${s.toString().padStart(2,'0')}`;
+                    }
+                    return `<div class="timer-display">
+                    <div class="timer-status">${status}</div>
+                    <div class="timer-big" style="color:${col}">${time}</div>
                     </div>`;
-        }
+                }
 
         // --- ПАНЕЛЬ АДМІНІСТРАТОРА ---
         function adminGate() {
