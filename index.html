@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Пилиповицька Гімназія</title>
+    <title>Пилиповицька Гімназія | Smart Portal</title>
     
     <style>
         :root {
@@ -14,7 +14,7 @@
             --text-light: #ffffff;
             --main-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             
-            /* Нові кольори статусів */
+            /* Кольори статусів уроків */
             --status-passed: #b2bec3;   /* Сірий */
             --status-future: #2ecc71;   /* Зелений */
             --status-current: #3498db;  /* Синій */
@@ -190,8 +190,6 @@
             background: #ebf5fb;
             transform: scale(1.03);
             box-shadow: 0 5px 20px rgba(52, 152, 219, 0.2);
-            border-top: 1px solid rgba(52, 152, 219, 0.1);
-            border-right: 1px solid rgba(52, 152, 219, 0.1);
         }
         .lesson-card.status-current .lesson-name {
             color: var(--status-current);
@@ -233,7 +231,6 @@
         .timer-big {
             font-size: 48px;
             font-weight: 900;
-            color: var(--status-current);
             line-height: 1.2;
             font-variant-numeric: tabular-nums;
         }
@@ -323,7 +320,7 @@
         <p id="live-clock"></p>
     </div>
 
-    <div class="signature">Byme</div>
+    <div class="signature">Byme smart system v2.2</div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
         <div class="window-content" id="win-container" onclick="event.stopPropagation()">
@@ -341,9 +338,10 @@
         const keyFromUrl = urlParams.get('key');
         if (keyFromUrl) {
             localStorage.setItem('my_ai_key', keyFromUrl);
-            window.history.replaceState({}, document.title, window.location.pathname); // прибрати ключ з адреси
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
+        // Динамічні функції для отримання ключа (щоб не було 404)
         const getApiKey = () => localStorage.getItem('my_ai_key') || "";
         const getApiUrl = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getApiKey()}`;
 
@@ -418,10 +416,9 @@
             }, 400);
         }
 
-        // --- УНІВЕРСАЛЬНИЙ РЕНДЕР РОЗКЛАДУ З МЕХАНІКОЮ КОЛЬОРІВ ---
+        // --- РЕНДЕР РОЗКЛАДУ З КОЛЬОРАМИ ---
         function renderDayUI(dayIdx, isLiveUpdate) {
             const data = schedule[dayIdx];
-            // Безпека: якщо даних немає, не рендеримо соплі
             if(!data) return ''; 
             
             const now = new Date();
@@ -432,7 +429,6 @@
             data.lessons.forEach((name, i) => {
                 let statusClass = "status-future"; // Дефолт: Зелений (ще буде)
                 
-                // Механіка кольорів працює тільки якщо ми рендеримо СЬОГОДНІШНІЙ день
                 if(isLiveUpdate && bellTimes[i]) {
                     const [sh, sm] = bellTimes[i].s.split(':').map(Number);
                     const [eh, em] = bellTimes[i].e.split(':').map(Number);
@@ -461,80 +457,82 @@
             return html;
         }
 
-        // --- МОДУЛЬ ТАЙМЕРА (БЕЗ НАДПИСУ ВИХІДНИЙ) ---
+        // --- МОДУЛЬ ТАЙМЕРА (ФІКС ВИХІДНИХ) ---
         function startTimerModule(container) {
             const update = () => {
                 const now = new Date();
-                let day = now.getDay(); // 0-6
+                const day = now.getDay(); 
                 
-                // ФІКС: Якщо сб або нд, перемикаємо логіку на ПОНЕДІЛОК (1)
-                const isWeekend = (day === 0 || day === 6);
-                const logicalDay = isWeekend ? 1 : day;
+                // Якщо неділя (0) або субота (6) -> беремо розклад понеділка (1)
+                const logicalDay = (day === 0 || day === 6) ? 1 : day;
 
-                const curMin = now.getHours() * 60 + now.getMinutes();
-                const curSec = now.getSeconds();
+                const curTotalSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
                 let found = false;
                 let timerHeaderHtml = "";
 
-                // Шукаємо поточний урок або перерву (тільки в будні)
-                if(!isWeekend) {
-                    for(let i=0; i < bellTimes.length; i++) {
-                        const sArr = bellTimes[i].s.split(':').map(Number);
-                        const eArr = bellTimes[i].e.split(':').map(Number);
-                        const sTotal = sArr[0]*60 + sArr[1];
-                        const eTotal = eArr[0]*60 + eArr[1];
+                // Проходимо по всіх дзвінках
+                for(let i=0; i < bellTimes.length; i++) {
+                    const sArr = bellTimes[i].s.split(':').map(Number);
+                    const eArr = bellTimes[i].e.split(':').map(Number);
+                    const sTotal = sArr[0]*3600 + sArr[1]*60;
+                    const eTotal = eArr[0]*3600 + eArr[1]*60;
 
-                        if(curMin >= sTotal && curMin < eTotal) {
-                            // Йде урок
-                            const remainMin = eTotal - curMin - 1;
-                            timerHeaderHtml = `
-                                <div class="timer-display">
-                                    <div class="timer-status">Триває ${i+1}-й урок</div>
-                                    <div class="timer-big">${remainMin}:${(59-curSec).toString().padStart(2,'0')}</div>
-                                    <div style="color:#3498db; font-weight:600; font-size:13px; margin-top:5px;">До дзвінка</div>
-                                </div>`;
-                            found = true; break;
-                        } else if (i < bellTimes.length - 1) {
-                            // Перевірка на перерву
-                            const nsArr = bellTimes[i+1].s.split(':').map(Number);
-                            const nsTotal = nsArr[0]*60 + nsArr[1];
-                            if(curMin >= eTotal && curMin < nsTotal) {
-                                const remainMin = nsTotal - curMin - 1;
-                                timerHeaderHtml = `
-                                    <div class="timer-display">
-                                        <div class="timer-status">Перерва</div>
-                                        <div class="timer-big">${remainMin}:${(59-curSec).toString().padStart(2,'0')}</div>
-                                        <div style="color:#2ecc71; font-weight:600; font-size:13px; margin-top:5px;">До ${i+2}-го уроку</div>
-                                    </div>`;
-                                found = true; break;
-                            }
+                    if(curTotalSec >= sTotal && curTotalSec < eTotal) {
+                        const remainSec = eTotal - curTotalSec;
+                        timerHeaderHtml = renderTimerUI(`Триває ${i+1}-й урок`, remainSec, "До дзвінка", "#3498db");
+                        found = true; 
+                        break;
+                    } else if (i < bellTimes.length - 1) {
+                        const nsArr = bellTimes[i+1].s.split(':').map(Number);
+                        const nsTotal = nsArr[0]*3600 + nsArr[1]*60;
+                        
+                        if(curTotalSec >= eTotal && curTotalSec < nsTotal) {
+                            const remainSec = nsTotal - curTotalSec;
+                            timerHeaderHtml = renderTimerUI("Перерва", remainSec, `До ${i+2}-го уроку`, "#2ecc71");
+                            found = true; 
+                            break;
                         }
                     }
                 }
 
-                // Якщо урок не знайдено (вечір, ранок або вихідний)
                 if(!found) {
-                    let msg = curMin < 510 ? 'Ранок (чекаємо уроків)' : 'Навчання завершено';
-                    if(isWeekend) msg = "Час відпочинку (Демо)";
-                    timerHeaderHtml = `
-                        <div class="timer-display">
-                            <div class="timer-status">${msg}</div>
-                            <div class="timer-big">--:--</div>
-                        </div>`;
+                    const firstLessonTotal = 8*3600 + 30*60;
+                    if (curTotalSec < firstLessonTotal) {
+                        const remainSec = firstLessonTotal - curTotalSec;
+                        timerHeaderHtml = renderTimerUI("Ранок", remainSec, "До 1-го уроку", "#f39c12");
+                    } else {
+                        timerHeaderHtml = renderTimerUI("Навчання завершено", null, "До завтра", "#7f8c8d");
+                    }
                 }
 
-                // Рендеримо заголовок + розклад (logicalDay гарантує, що не буде порожньо)
-                container.innerHTML = timerHeaderHtml + renderDayUI(logicalDay, !isWeekend);
+                container.innerHTML = timerHeaderHtml + renderDayUI(logicalDay, true);
             };
+
+            function renderTimerUI(status, seconds, subtext, color) {
+                let timeStr = "--:--";
+                if (seconds !== null) {
+                    const h = Math.floor(seconds / 3600);
+                    const m = Math.floor((seconds % 3600) / 60);
+                    const s = seconds % 60;
+                    timeStr = (h > 0 ? h + ":" : "") + m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
+                }
+                return `
+                    <div class="timer-display">
+                        <div class="timer-status">${status}</div>
+                        <div class="timer-big" style="color:${color}">${timeStr}</div>
+                        <div style="color:${color}; font-weight:600; font-size:13px; margin-top:5px;">${subtext}</div>
+                    </div>`;
+            }
+
             update();
-            window.appInterval = setInterval(update, 1000); // Оновлення кожну секунду
+            window.appInterval = setInterval(update, 1000);
         }
 
-        // --- AI LOGIC ---
+        // --- AI LOGIC (ФІКС 404) ---
         function launchChat(container) {
             container.innerHTML = `
                 <div class="chat-wrap">
-                    <div class="chat-messages" id="chat-flow"><div class="bubble ai">Вітаю! Я ШІ гімназії. Натисни "🔑" внизу панелі, щоб налаштувати ключ, якщо я не відповідаю. Запитуй!</div></div>
+                    <div class="chat-messages" id="chat-flow"><div class="bubble ai">Вітаю! Я ШІ гімназії. Натисни "🔑" внизу панелі, щоб налаштувати ключ, якщо я не відповідаю.</div></div>
                     <div id="ai-status">ШІ думає...</div>
                     <div class="chat-controls">
                         <input type="text" class="chat-input" id="ai-input" placeholder="Які уроки у середу?">
@@ -549,15 +547,20 @@
             const inp = document.getElementById('ai-input');
             const text = inp.value.trim();
             if(!text) return;
-            if(!getApiKey()) return alert("API ключ не налаштовано! Додай ?key=... в URL або натисни на 🔑.");
+            
+            // Жорстка перевірка ключа ПЕРЕД запитом
+            const apiKey = getApiKey();
+            if(!apiKey) {
+                appendBubble("⚠️ Помилка: API ключ не знайдено! Додай ?key=... в URL або натисни на 🔑 зліва внизу.", 'ai');
+                return; // Зупиняємо функцію, щоб не було 404 помилки в консолі
+            }
 
             appendBubble(text, 'user');
             inp.value = '';
             const status = document.getElementById('ai-status');
             status.style.display = 'block';
 
-            // Повний контекст
-            const context = `Ти асистент Пилиповицької гімназії. Ось актуальний розклад уроків: ${JSON.stringify(schedule)}. Дзвінки: 1(08:30-09:15), 2(09:25-10:10), 3(10:30-11:15), 4(11:25-12:10), 5(12:20-13:05), 6(13:10-13:55), 7(14:00-14:45), 8(14:50-15:35). Сьогодні ${new Date().toLocaleDateString('uk-UA',{weekday:'long'})}. Відповідай українською мовою, дуже коротко. Запит: ${text}`;
+            const context = `Ти асистент Пилиповицької гімназії. Розклад уроків: ${JSON.stringify(schedule)}. Дзвінки: 1(08:30-09:15), 2(09:25-10:10), 3(10:30-11:15), 4(11:25-12:10), 5(12:20-13:05), 6(13:10-13:55), 7(14:00-14:45), 8(14:50-15:35). Сьогодні ${new Date().toLocaleDateString('uk-UA',{weekday:'long'})}. Відповідай українською мовою, дуже коротко. Запит: ${text}`;
 
             try {
                 const res = await fetch(getApiUrl(), {
@@ -565,13 +568,20 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ contents: [{ parts: [{ text: context }] }] })
                 });
+                
                 const data = await res.json();
                 status.style.display = 'none';
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "🔌 Помилка: Сервер не надав відповіді. Перевір ліміти ключа.";
+                
+                if (data.error) {
+                    appendBubble("🔌 Помилка API: " + data.error.message, 'ai');
+                    return;
+                }
+                
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "🔌 Помилка: Сервер не надав відповіді.";
                 appendBubble(reply, 'ai');
             } catch(e) {
                 status.style.display = 'none';
-                appendBubble("⚠️ Помилка з'єднання. Перевір інтернет.", 'ai');
+                appendBubble("⚠️ Помилка з'єднання. Перевір інтернет або правильність API-ключа.", 'ai');
             }
         }
 
@@ -587,7 +597,7 @@
 
         // --- АДМІНКА ТА НАЛАШТУВАННЯ КЛЮЧА ---
         function adminGate() {
-            const p = prompt("Адмін-пароль АБО новий API Key:");
+            const p = prompt("Адмін-пароль АБО новий API Key (починається з AIza...):");
             if(!p) return;
 
             if(p === ADMIN_PASS) {
@@ -596,9 +606,8 @@
                 alert("Режим редагування ДЗ увімкнено.");
                 location.reload();
             } else if (p.startsWith("AIza")) {
-                // Якщо ввели ключ Gemini
                 localStorage.setItem('my_ai_key', p);
-                alert("API Key ШІ оновлено.");
+                alert("API Key ШІ успішно збережено!");
                 location.reload();
             } else {
                 alert("Невірний ввід.");
