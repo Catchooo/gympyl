@@ -17,9 +17,10 @@
             --status-future: #2ecc71;
             --status-current: #3498db;
             --window-bg: #f0f2f5;
-            --glass: rgba(255, 255, 255, 0.8);
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
+        /* --- ОСНОВНІ СТИЛІ --- */
         * { 
             box-sizing: border-box; 
             margin: 0; 
@@ -39,7 +40,7 @@
             color: #2d3436;
         }
 
-        /* --- TASKBAR --- */
+        /* --- ПАНЕЛЬ ЗАДАЧ (TASKBAR) --- */
         .taskbar {
             width: 75px;
             background: var(--taskbar-bg);
@@ -53,7 +54,7 @@
             gap: 20px;
             z-index: 1000;
             border-right: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
         .task-icon {
@@ -91,7 +92,7 @@
             border-radius: 50%;
         }
 
-        /* --- DESKTOP --- */
+        /* --- РОБОЧИЙ СТІЛ --- */
         .desktop-greeting {
             position: absolute;
             top: 45%;
@@ -113,32 +114,20 @@
         }
 
         .desktop-greeting h1 {
-            font-size: clamp(2rem, 8vw, 4.5rem);
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
             margin-bottom: 15px;
             font-weight: 800;
             letter-spacing: -2px;
-            line-height: 1;
         }
 
         #live-clock {
-            font-size: clamp(1rem, 4vw, 1.8rem);
+            font-size: clamp(1.2rem, 4vw, 2rem);
             font-weight: 300;
             opacity: 0.9;
             font-variant-numeric: tabular-nums;
         }
 
-        .signature {
-            position: absolute;
-            bottom: 30px;
-            right: 40px;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        /* --- WINDOW SYSTEM --- */
+        /* --- СИСТЕМА ВІКОН --- */
         .window-overlay {
             position: fixed;
             top: 0;
@@ -165,7 +154,6 @@
             display: flex;
             flex-direction: column;
             box-shadow: 25px 0 60px rgba(0,0,0,0.4);
-            position: relative;
         }
 
         .window-content.active { transform: translateX(0); }
@@ -177,7 +165,6 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #e1e4e8;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
         .window-header h2 { font-size: 22px; font-weight: 700; color: #1e272e; }
@@ -198,7 +185,7 @@
             background: #fdfdfd;
         }
 
-        /* --- UI COMPONENTS --- */
+        /* --- КАРТКИ УРОКІВ ТА ДЗ --- */
         .lesson-card {
             background: #ffffff;
             padding: 18px;
@@ -206,10 +193,8 @@
             border-radius: 16px;
             border-left: 8px solid #dfe6e9;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            box-shadow: var(--card-shadow);
         }
-
-        .lesson-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
 
         .lesson-card.status-passed { border-left-color: var(--status-passed); opacity: 0.65; background: #f1f2f6; }
         .lesson-card.status-current { 
@@ -235,9 +220,16 @@
             position: relative;
         }
 
-        .homework-box::before { content: 'HW:'; position: absolute; top: -8px; left: 10px; background: white; padding: 0 5px; font-size: 10px; font-weight: 900; color: var(--win-accent); }
+        .homework-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            color: #2d3436;
+        }
 
-        /* --- TIMER BOX --- */
+        /* --- ТАЙМЕР --- */
         .timer-display {
             background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
             border-radius: 20px;
@@ -251,32 +243,26 @@
         .timer-big { font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin: 10px 0; }
         .timer-status { font-size: 12px; color: #a4b0be; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
 
-        /* --- RESPONSIVE --- */
+        /* --- АДАПТИВНІСТЬ --- */
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
             .taskbar { 
-                width: 100%; 
-                height: 75px; 
-                flex-direction: row; 
-                justify-content: space-around; 
-                padding: 0 15px; 
-                border-right: none; 
-                border-top: 1px solid rgba(255,255,255,0.1); 
+                width: 100%; height: 75px; 
+                flex-direction: row; justify-content: space-around; 
+                padding: 0 15px; border-right: none; border-top: 1px solid rgba(255,255,255,0.1); 
             }
             .window-overlay { left: 0; bottom: 75px; }
             .window-content { max-width: 100%; border-radius: 30px 30px 0 0; }
-            .task-icon.active::after { bottom: 5px; }
-            .desktop-greeting h1 { font-size: 2.8rem; }
         }
     </style>
 </head>
 <body id="app-shell">
 
     <nav class="taskbar">
-        <div class="task-icon" id="btn-timer" onclick="openApp('timer')" title="Таймер">🔔</div>
-        <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')" title="Завтра">📅</div>
-        <div class="task-icon" id="btn-full" onclick="openApp('full')" title="Тиждень">📖</div>
-        <div class="task-icon" id="btn-ai" onclick="openApp('ai')" title="AI Помічник">🤖</div>
+        <div class="task-icon" id="btn-timer" onclick="openApp('timer')">🔔</div>
+        <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')">📅</div>
+        <div class="task-icon" id="btn-full" onclick="openApp('full')">📖</div>
+        <div class="task-icon" id="btn-ai" onclick="openApp('ai')">🤖</div>
         <div class="task-icon" style="margin-top:auto; opacity:0.1;" onclick="adminGate()">🔑</div>
     </nav>
 
@@ -284,7 +270,6 @@
         <h1 id="school-name">Пилиповицька Гімназія</h1>
         <p id="live-clock">Завантаження...</p>
     </div>
-
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
         <div class="window-content" id="win-container" onclick="event.stopPropagation()">
@@ -299,7 +284,7 @@
     <script src="ai.js"></script>
 
     <script>
-        // --- DATA & CONFIG ---
+        // --- ДАНІ ТА НАЛАШТУВАННЯ ---
         const ADMIN_PASS = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
 
@@ -318,13 +303,14 @@
             {s: "14:00", e: "14:45"}, {s: "14:50", e: "15:35"}
         ];
 
-        // --- CORE LOGIC ---
+        // --- ЛОГІКА ГОДИННИКА ---
         setInterval(() => {
             const now = new Date();
             const clock = document.getElementById('live-clock');
-            if(clock) clock.innerText = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if(clock) clock.innerText = now.toLocaleTimeString('uk-UA');
         }, 1000);
 
+        // --- КЕРУВАННЯ ВІКНАМИ ---
         function openApp(id) {
             const area = document.getElementById('win-render-area');
             const title = document.getElementById('win-title');
@@ -340,7 +326,7 @@
 
             switch(id) {
                 case 'timer':
-                    title.innerText = "Розклад Онлайн";
+                    title.innerText = "Поточний статус";
                     startTimerModule(area);
                     break;
                 case 'tomorrow':
@@ -350,21 +336,12 @@
                     area.innerHTML = renderDayUI(targetDay, false);
                     break;
                 case 'full':
-                    title.innerText = "Тиждень";
+                    title.innerText = "Розклад на тиждень";
                     area.innerHTML = [1,2,3,4,5].map(i => renderDayUI(i, false)).join('');
                     break;
                 case 'ai':
                     title.innerText = "AI Асистент";
-                    if(typeof launchChat === 'function') {
-                        launchChat(area);
-                    } else {
-                        area.innerHTML = `
-                            <div style="padding:40px; text-align:center;">
-                                <div style="font-size:50px; margin-bottom:20px;">⚠️</div>
-                                <h3>Файл ai.js не підключено</h3>
-                                <p style="color:#666; margin-top:10px;">Створіть файл ai.js в корені сайту.</p>
-                            </div>`;
-                    }
+                    if(typeof launchChat === 'function') launchChat(area);
                     break;
             }
         }
@@ -373,10 +350,10 @@
             document.getElementById('win-container').classList.remove('active');
             document.getElementById('app-shell').classList.remove('window-open');
             document.querySelectorAll('.task-icon').forEach(el => el.classList.remove('active'));
-            setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 500);
+            setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 400);
         }
 
-        // --- RENDERING ---
+        // --- ВІДОБРАЖЕННЯ РОЗКЛАДУ ТА ДЗ ---
         function renderDayUI(dayIdx, isLive) {
             const data = schedule[dayIdx];
             if(!data) return '';
@@ -398,7 +375,7 @@
                     else if(nowMin >= startTotal) status = "status-current";
                 }
                 
-                const hw = localStorage.getItem('hw_' + name) || "Натисніть ключ для редагування";
+                const hw = localStorage.getItem('hw_' + name) || "Не записано";
                 html += `
                 <div class="lesson-card ${status}">
                     <div class="lesson-info">
@@ -406,16 +383,16 @@
                         <span class="lesson-time">${bellTimes[i]?.s || '--'} - ${bellTimes[i]?.e || '--'}</span>
                     </div>
                     <div class="homework-box">
-                        ${isEditMode ? `<input type="text" value="${hw === 'Натисніть ключ для редагування' ? '' : hw}" 
-                            placeholder="Введіть ДЗ..."
-                            onchange="localStorage.setItem('hw_${name}', this.value)" 
-                            style="width:100%; border:none; background:transparent; outline:none; font-size:14px;">` : hw}
+                        ${isEditMode ? `<input type="text" class="homework-input" value="${hw === 'Не записано' ? '' : hw}" 
+                            placeholder="ДЗ: Введіть завдання..."
+                            onchange="localStorage.setItem('hw_${name}', this.value || 'Не записано')">` : 'ДЗ: ' + hw}
                     </div>
                 </div>`;
             });
             return html;
         }
 
+        // --- МОДУЛЬ ТАЙМЕРА ---
         function startTimerModule(container) {
             const update = () => {
                 const now = new Date();
@@ -424,35 +401,33 @@
                 let found = false;
                 let timerHtml = "";
 
-                // Вихідні
-                if(day === 0 || day === 6) {
-                    timerHtml = renderTimerUI("Вихідний", null, "Відпочивай", "#7f8c8d");
-                } else {
-                    for(let i=0; i < bellTimes.length; i++) {
-                        const [sh, sm] = bellTimes[i].s.split(':').map(Number);
-                        const [eh, em] = bellTimes[i].e.split(':').map(Number);
-                        const s = sh*3600 + sm*60, e = eh*3600 + em*60;
+                // Якщо вихідні — показуємо розклад на понеділок
+                const activeDay = (day === 0 || day === 6) ? 1 : day;
 
-                        if(curSec >= s && curSec < e) {
-                            timerHtml = renderTimerUI(`Зараз ${i+1} урок`, e - curSec, "До кінця уроку", "#3498db");
+                for(let i=0; i < bellTimes.length; i++) {
+                    const [sh, sm] = bellTimes[i].s.split(':').map(Number);
+                    const [eh, em] = bellTimes[i].e.split(':').map(Number);
+                    const s = sh*3600 + sm*60, e = eh*3600 + em*60;
+
+                    if(curSec >= s && curSec < e) {
+                        timerHtml = renderTimerUI("До кінця уроку", e - curSec, "#3498db");
+                        found = true; break;
+                    } else if (i < bellTimes.length - 1) {
+                        const [nsh, nsm] = bellTimes[i+1].s.split(':').map(Number);
+                        const ns = nsh*3600 + nsm*60;
+                        if(curSec >= e && curSec < ns) {
+                            timerHtml = renderTimerUI("До початку уроку", ns - curSec, "#2ecc71");
                             found = true; break;
-                        } else if (i < bellTimes.length - 1) {
-                            const [nsh, nsm] = bellTimes[i+1].s.split(':').map(Number);
-                            const ns = nsh*3600 + nsm*60;
-                            if(curSec >= e && curSec < ns) {
-                                timerHtml = renderTimerUI("Перерва", ns - curSec, "До початку уроку", "#2ecc71");
-                                found = true; break;
-                            }
                         }
                     }
-                    if(!found) timerHtml = renderTimerUI("Уроки закінчились", null, "Гарного вечора", "#e67e22");
                 }
-                container.innerHTML = timerHtml + renderDayUI(day === 0 || day === 6 ? 1 : day, true);
+                if(!found) timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
+                container.innerHTML = timerHtml + renderDayUI(activeDay, true);
             };
             update(); window.appInterval = setInterval(update, 1000);
         }
 
-        function renderTimerUI(status, sec, sub, col) {
+        function renderTimerUI(status, sec, col) {
             let time = "--:--";
             if(sec !== null) {
                 const m = Math.floor(sec/60), s = sec%60;
@@ -461,15 +436,14 @@
             return `<div class="timer-display">
                         <div class="timer-status">${status}</div>
                         <div class="timer-big" style="color:${col}">${time}</div>
-                        <div style="color:${col}; font-size:12px; font-weight:600; text-transform:uppercase;">${sub}</div>
                     </div>`;
         }
 
+        // --- ПАНЕЛЬ АДМІНІСТРАТОРА ---
         function adminGate() {
             const p = prompt("Пароль адміністратора:");
             if(p === ADMIN_PASS) { 
                 localStorage.setItem('gym_admin', 'true'); 
-                alert("Режим редагування активовано!");
                 location.reload(); 
             } else if (p === "off") {
                 localStorage.removeItem('gym_admin');
