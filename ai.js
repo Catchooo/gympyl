@@ -1,94 +1,87 @@
-// --- МОДУЛЬ ШІ (ОКРЕМИЙ ФАЙЛ) ---
+/**
+ * ai.js - Логіка AI асистента для Пилиповицької Гімназії
+ */
 
-// Отримуємо ключ із пам'яті браузера
-const getApiKey = () => localStorage.getItem('my_ai_key') || "";
-
-// Формуємо URL (вже з фіксом -latest)
-const getApiUrl = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${getApiKey()}`;
-
-// Малюємо вікно чату, коли натискаєш на іконку робота
+// Функція, яку викликає головний файл при натисканні на іконку робота
 function launchChat(container) {
     container.innerHTML = `
-        <div class="chat-wrap" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="chat-messages" id="chat-flow" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px;">
-                <div class="bubble ai" style="background: white; padding: 12px; border-radius: 15px; align-self: flex-start;">
-                    Привіт! Я твій ШІ-помічник. Чим допомогти?
+        <div id="chat-container" style="display: flex; flex-direction: column; height: 100%; max-height: 100%;">
+            <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 15px; background: #ffffff; border-radius: 12px; margin-bottom: 15px; border: 1px solid #f0f0f0;">
+                <div class="bot-msg" style="background: #f0edff; padding: 10px 15px; border-radius: 15px 15px 15px 0; margin-bottom: 10px; align-self: flex-start; max-width: 85%; font-size: 14px; color: #4834d4;">
+                    Привіт! Я твій інтелектуальний помічник. Можу підказати розклад або допомогти з оцінками. Що тебе цікавить?
                 </div>
             </div>
-            <div id="ai-status" style="display: none; color: #6c5ce7; text-align: center; font-size: 12px; padding: 5px;">ШІ думає...</div>
-            <div class="chat-controls" style="padding: 15px; display: flex; gap: 10px; background: white; border-top: 1px solid #eee;">
-                <input type="text" class="chat-input" id="ai-input" placeholder="Запитай про розклад..." style="flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; outline: none;">
-                <button onclick="askAI()" style="background: #6c5ce7; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">➤</button>
+            
+            <div style="display: flex; gap: 8px; background: #fff; padding: 5px; border-radius: 12px; border: 1px solid #ddd;">
+                <input type="text" id="chat-input" placeholder="Напиши повідомлення..." 
+                    style="flex: 1; border: none; padding: 10px; outline: none; font-size: 14px;">
+                <button onclick="handleSendMessage()" 
+                    style="background: #6c5ce7; color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; transition: 0.3s;">
+                    ➤
+                </button>
             </div>
-        </div>`;
-    
-    // Додаємо обробку Enter
-    document.getElementById('ai-input')?.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') askAI();
+        </div>
+    `;
+
+    // Додаємо можливість відправки через Enter
+    document.getElementById('chat-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') handleSendMessage();
     });
 }
 
-// Головна функція запиту
-async function askAI() {
-    const inp = document.getElementById('ai-input');
-    const text = inp.value.trim();
-    if(!text) return;
-    
-    const key = getApiKey();
-    if(!key) {
-        appendBubble("⚠️ Помилка: Ключ не встановлено. Натисни на 🔑.", 'ai');
-        return;
-    }
+// Функція обробки відправки повідомлення
+function handleSendMessage() {
+    const input = document.getElementById('chat-input');
+    const container = document.getElementById('chat-messages');
+    const text = input.value.trim();
 
-    appendBubble(text, 'user');
-    inp.value = '';
-    const status = document.getElementById('ai-status');
-    status.style.display = 'block';
+    if (text === "") return;
 
-    // Контекст для ШІ (беремо розклад із глобальної змінної schedule в index.html)
-    const aiPrompt = `Ти асистент Пилиповицької гімназії. Твій розклад: ${JSON.stringify(window.schedule)}. Відповідай дуже коротко. Запит: ${text}`;
+    // 1. Додаємо повідомлення користувача в чат
+    container.innerHTML += `
+        <div style="background: #6c5ce7; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; margin-bottom: 10px; align-self: flex-end; max-width: 85%; margin-left: auto; font-size: 14px; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);">
+            ${text}
+        </div>
+    `;
 
-    try {
-        const response = await fetch(getApiUrl(), {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ contents: [{ parts: [{ text: aiPrompt }] }] })
-        });
-        
-        const data = await response.json();
-        status.style.display = 'none';
+    input.value = "";
+    container.scrollTop = container.scrollHeight;
 
-        if (data.error) {
-            appendBubble("🔌 Помилка API: " + data.error.message, 'ai');
-        } else {
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Немає відповіді.";
-            appendBubble(reply, 'ai');
-        }
-    } catch(e) {
-        status.style.display = 'none';
-        appendBubble("⚠️ Проблема з мережею.", 'ai');
-    }
+    // 2. Імітуємо "мислення" бота
+    setTimeout(() => {
+        const response = generateBotResponse(text);
+        container.innerHTML += `
+            <div style="background: #f1f2f6; color: #2d3436; padding: 10px 15px; border-radius: 15px 15px 15px 0; margin-bottom: 10px; align-self: flex-start; max-width: 85%; font-size: 14px;">
+                ${response}
+            </div>
+        `;
+        container.scrollTop = container.scrollHeight;
+    }, 800);
 }
 
-// Функція створення бульбашок повідомлень
-function appendBubble(msg, role) {
-    const flow = document.getElementById('chat-flow');
-    if(!flow) return;
-    const div = document.createElement('div');
-    div.className = `bubble ${role}`;
+// Функція генерації відповідей (логіка бота)
+function generateBotResponse(input) {
+    const msg = input.toLowerCase();
     
-    // Стилі для бульбашок прямо в JS, щоб не захаращувати CSS
-    const isUser = role === 'user';
-    div.style.background = isUser ? '#6c5ce7' : 'white';
-    div.style.color = isUser ? 'white' : 'black';
-    div.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
-    div.style.padding = '12px 16px';
-    div.style.borderRadius = '18px';
-    div.style.maxWidth = '85%';
-    div.style.fontSize = '14px';
-    div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+    if (msg.includes("привіт") || msg.includes("хай")) {
+        return "Вітаю! Готовий до навчання сьогодні?";
+    }
     
-    div.innerText = msg;
-    flow.appendChild(div);
-    flow.scrollTop = flow.scrollHeight;
+    if (msg.includes("розклад")) {
+        return "Розклад можна подивитися, натиснувши на іконку 📖 або 📅 в меню зліва.";
+    }
+    
+    if (msg.includes("оцінк") || msg.includes("бали")) {
+        return "Твої оцінки тепер надійно зберігаються у Firebase. Перевір вкладку 📊!";
+    }
+
+    if (msg.includes("хто ти")) {
+        return "Я — AI асистент Пилиповицької Гімназії. Допомагаю учням не забувати про уроки та дз.";
+    }
+
+    if (msg.includes("дякую")) {
+        return "Завжди радий допомогти! Успіхів у навчанні! 🎓";
+    }
+
+    return "Цікава думка! Я поки що вчуся, але обов'язково передам це розробнику.";
 }
