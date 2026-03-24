@@ -237,6 +237,12 @@
         .timer-big { font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin: 10px 0; }
         .timer-status { font-size: 12px; color: #a4b0be; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
 
+        /* Стилі для форми логіну та оцінок */
+        .auth-input { padding: 10px; border-radius: 8px; border: 1px solid #ccc; width: 100%; margin-bottom: 10px; }
+        .auth-btn { padding: 10px 15px; border-radius: 8px; border: none; background: var(--win-accent); color: white; cursor: pointer; margin-right: 5px; }
+        .auth-btn:hover { background: var(--win-accent-active); }
+        .grade-input { width: 60px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; margin-top: 5px; }
+
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
             .taskbar { 
@@ -255,6 +261,7 @@
         <div class="task-icon" id="btn-timer" onclick="openApp('timer')">🔔</div>
         <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')">📅</div>
         <div class="task-icon" id="btn-full" onclick="openApp('full')">📖</div>
+        <div class="task-icon" id="btn-grades" onclick="openApp('grades')">📊</div>
         <div class="task-icon" id="btn-ai" onclick="openApp('ai')">🤖</div>
         <div class="task-icon" style="margin-top:auto; opacity:0.1;" onclick="adminGate()">🔑</div>
     </nav>
@@ -275,6 +282,29 @@
     </div>
 
     <script src="ai.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } 
+        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } 
+        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3s_6Loohs0A_WIgxbHVDQswdO9WdKmNw",
+            authDomain: "school-site-97ce4.firebaseapp.com",
+            projectId: "school-site-97ce4",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Робимо змінні доступними для звичайного скріпта нижче
+        window.auth = auth;
+        window.db = db;
+        window.fb = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, doc, setDoc, getDoc };
+    </script>
 
     <script>
         const ADMIN_PASS = "br.m.airways@gmail.com";
@@ -330,6 +360,10 @@
                 case 'full':
                     title.innerText = "Розклад на тиждень";
                     area.innerHTML = [1,2,3,4,5].map(i => renderDayUI(i, false)).join('');
+                    break;
+                case 'grades':
+                    title.innerText = "Нові знання";
+                    renderGrades(area);
                     break;
                 case 'ai':
                     title.innerText = "AI Асистент";
@@ -434,6 +468,96 @@
                         <div class="timer-status">${status}</div>
                         <div class="timer-big" style="color:${col}">${time}</div>
                     </div>`;
+        }
+
+        // --- ФУНКЦІЇ FIREBASE ---
+        async function renderGrades(container) {
+            if (!window.auth) {
+                container.innerHTML = "<p>Завантаження бази даних... Спробуй ще раз через секунду.</p>";
+                return;
+            }
+
+            const user = window.auth.currentUser;
+
+            if (!user) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 20px;">
+                        <h3 style="margin-bottom: 20px;">Вхід до щоденника</h3>
+                        <input class="auth-input" id="email" placeholder="Email"><br>
+                        <input class="auth-input" id="pass" type="password" placeholder="Пароль"><br><br>
+                        <button class="auth-btn" onclick="login()">Увійти</button>
+                        <button class="auth-btn" style="background: #34495e;" onclick="register()">Реєстрація</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const ref = window.fb.doc(window.db, "grades", user.uid);
+            const snap = await window.fb.getDoc(ref);
+            const data = snap.exists() ? snap.data() : {};
+
+            // Отримуємо унікальний список предметів, щоб вони не повторювались по днях
+            let uniqueLessons = [];
+            Object.values(schedule).forEach(day => {
+                day.lessons.forEach(lesson => {
+                    if(!uniqueLessons.includes(lesson)) uniqueLessons.push(lesson);
+                });
+            });
+
+            container.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h3>📊 Мої оцінки</h3>
+                    <button class="auth-btn" style="background:#e74c3c; padding: 5px 10px; font-size:12px;" onclick="logout()">Вийти</button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                ${uniqueLessons.map(lesson => `
+                    <div class="lesson-card" style="margin-bottom:0; padding: 12px;">
+                        <strong style="font-size:14px;">${lesson}</strong><br>
+                        <input class="grade-input" type="number" placeholder="Оцінка" value="${data[lesson] || ''}"
+                        onchange="saveGrade('${lesson}', this.value)">
+                    </div>
+                `).join('')}
+                </div>
+            `;
+        }
+
+        async function login() {
+            try {
+                const email = document.getElementById('email').value;
+                const pass = document.getElementById('pass').value;
+                await window.fb.signInWithEmailAndPassword(window.auth, email, pass);
+                openApp('grades');
+            } catch (error) {
+                alert("Помилка входу: " + error.message);
+            }
+        }
+
+        async function register() {
+            try {
+                const email = document.getElementById('email').value;
+                const pass = document.getElementById('pass').value;
+                await window.fb.createUserWithEmailAndPassword(window.auth, email, pass);
+                openApp('grades');
+            } catch (error) {
+                alert("Помилка реєстрації: " + error.message);
+            }
+        }
+
+        function logout() {
+            window.fb.signOut(window.auth);
+            openApp('grades');
+        }
+
+        async function saveGrade(lesson, value) {
+            const user = window.auth.currentUser;
+            if (!user) return;
+
+            const ref = window.fb.doc(window.db, "grades", user.uid);
+            const snap = await window.fb.getDoc(ref);
+            const data = snap.exists() ? snap.data() : {};
+
+            data[lesson] = value;
+            await window.fb.setDoc(ref, data);
         }
 
         function adminGate() {
