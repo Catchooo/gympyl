@@ -239,6 +239,17 @@
 
         /* Стилі для форми логіну та оцінок */
         .grade-input { width: 60px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; margin-top: 5px; }
+        .auth-btn {
+            background: var(--win-accent);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .auth-btn:hover { background: var(--win-accent-active); }
 
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
@@ -258,7 +269,7 @@
         <div class="task-icon" id="btn-timer" onclick="openApp('timer')">🔔</div>
         <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')">📅</div>
         <div class="task-icon" id="btn-full" onclick="openApp('full')">📖</div>
-        <div class="task-icon" id="btn-settings" onclick="openApp('settings')">🏫</div>
+        <div class="task-icon" id="btn-classes" onclick="openApp('classes')">🏫</div>
         <div class="task-icon" style="margin-top:auto; opacity:0.1;" onclick="adminGate()">🔑</div>
     </nav>
 
@@ -279,13 +290,19 @@
 
     <script src="ai.js"></script>
 
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    <script>
+        try {
+            // Передбачається, що getAuth, getFirestore та app підключені вище або в ai.js
+            const auth = getAuth(app);
+            const db = getFirestore(app);
 
-        // Робимо змінні доступними для звичайного скріпта нижче
-        window.auth = auth;
-        window.db = db;
-        window.fb = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, doc, setDoc, getDoc };
+            // Робимо змінні доступними для звичайного скріпта нижче
+            window.auth = auth;
+            window.db = db;
+            window.fb = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, doc, setDoc, getDoc };
+        } catch (e) {
+            console.warn("Firebase ще не підключено або виникла помилка ініціалізації.");
+        }
     </script>
 
     <script>
@@ -327,18 +344,20 @@
             document.getElementById('app-shell').classList.add('window-open');
             
             setTimeout(() => document.getElementById('win-container').classList.add('active'), 20);
+            
             if (id === 'classes') {
                 title.innerText = "Обери свій клас";
                 area.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="auth-btn" onclick="setMyClass('5')">5 Клас</button>
-                <button class="auth-btn" onclick="setMyClass('6')">6 Клас</button>
-                <button class="auth-btn" onclick="setMyClass('7')">7 Клас</button>
-                <button class="auth-btn" onclick="setMyClass('8')">8 Клас</button>
-                <button class="auth-btn" onclick="setMyClass('9')">9 Клас</button>
+                    <button class="auth-btn" onclick="setMyClass('5')">5 Клас</button>
+                    <button class="auth-btn" onclick="setMyClass('6')">6 Клас</button>
+                    <button class="auth-btn" onclick="setMyClass('7')">7 Клас</button>
+                    <button class="auth-btn" onclick="setMyClass('8')">8 Клас</button>
+                    <button class="auth-btn" onclick="setMyClass('9')">9 Клас</button>
                 </div>
                 `;
             }
+
             // Функція для збереження класу
             window.setMyClass = function(c) {
                 localStorage.setItem('user_class', c);
@@ -362,7 +381,7 @@
                     break;
                 case 'grades':
                     title.innerText = "Нові знання";
-                    renderGrades(area);
+                    if (typeof renderGrades === 'function') renderGrades(area);
                     break;
                 case 'ai':
                     title.innerText = "AI Асистент";
