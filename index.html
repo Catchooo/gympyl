@@ -9,9 +9,9 @@
             --win-accent: #6c5ce7;
             --taskbar-bg: rgba(15, 15, 15, 0.9);
             --window-bg: #f8f9fa;
-            --status-passed: #b2bec3;
-            --status-future: #2ecc71;
-            --status-current: #3498db;
+            --status-passed: #b2bec3; /* Сірий */
+            --status-future: #2ecc71; /* Зелений */
+            --status-current: #3498db; /* Синій */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body {
@@ -27,12 +27,10 @@
             cursor: pointer; font-size: 24px; color: white; transition: 0.3s; border-radius: 12px;
             background: rgba(255,255,255,0.05);
         }
-        .task-icon:hover { background: rgba(255,255,255,0.15); }
-        .task-icon.active { background: var(--win-accent); box-shadow: 0 0 15px var(--win-accent); }
+        .task-icon.active { background: var(--win-accent); }
         
-        .desktop { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; transition: 0.5s; }
+        .desktop { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; }
         body.window-open .desktop { opacity: 0; transform: scale(0.9); }
-
         .clock { font-size: 80px; font-weight: 800; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         .window-overlay { position: fixed; top: 0; left: 75px; bottom: 0; right: 0; background: rgba(0,0,0,0.3); display: none; z-index: 500; backdrop-filter: blur(10px); }
@@ -41,13 +39,15 @@
         .window-header { padding: 20px; background: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; }
         .window-body { flex: 1; overflow-y: auto; padding: 20px; }
 
-        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #ddd; position: relative; }
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid var(--status-future); position: relative; }
         .card.status-current { border-left-color: var(--status-current); background: #ebf5ff; }
-        .card.status-passed { opacity: 0.6; }
+        .card.status-passed { border-left-color: var(--status-passed); opacity: 0.6; }
         
-        .hw-area { font-size: 13px; margin-top: 8px; color: #666; font-style: italic; border-top: 1px solid #eee; padding-top: 5px; }
-        .hw-input { width: 100%; border: 1px solid #ddd; background: #fff; padding: 5px; border-radius: 5px; font-size: 13px; color: #2d3436; outline: none; margin-top: 5px; }
+        .countdown { font-size: 14px; color: var(--status-current); font-weight: bold; margin-bottom: 10px; display: block; }
+        .tab-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; }
+        .tab-btn.active { background: var(--win-accent); color: white; border-color: var(--win-accent); }
 
+        .hw-input { width: 100%; border: 1px solid #ddd; background: #fff; padding: 5px; border-radius: 5px; font-size: 13px; margin-top: 5px; outline: none; }
         .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--win-accent); color: white; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
         
         @media (max-width: 768px) {
@@ -64,12 +64,12 @@
         <div class="task-icon" id="btn-week" onclick="openApp('week')">📖</div>
         <div class="task-icon" id="btn-grades" onclick="openApp('grades')">📊</div>
         <div class="task-icon" id="btn-settings" onclick="openApp('settings')">🏫</div>
-        <div class="task-icon" id="admin-btn" onclick="adminGate()" title="Адмін-панель">🔐</div>
+        <div class="task-icon" onclick="adminGate()">🔐</div>
     </nav>
 
     <div class="desktop">
         <div class="clock" id="clock">00:00</div>
-        <div id="desktop-info">Пилиповицька Гімназія</div>
+        <div id="desktop-info">Пилиповицька Гімназія | 6 Клас</div>
     </div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
@@ -86,6 +86,7 @@
         const ADMIN_PASS = "br.m.airways@gmail.com";
         let isAdmin = localStorage.getItem('gym_admin') === 'true';
         let currentClass = localStorage.getItem('user_class') || "6";
+        let viewTomorrow = false;
         
         const bellSound = new Audio('GO.mp3'); 
         let lastBellMin = null;
@@ -107,33 +108,14 @@
             }
         };
 
-        // Перевірка адміна
         function adminGate() {
-            if (isAdmin) {
-                const off = confirm("Ти вже адмін. Вимкнути режим редагування?");
-                if (off) {
-                    localStorage.removeItem('gym_admin');
-                    location.reload();
-                }
-                return;
-            }
-
-            const p = prompt("Введіть пароль адміністратора:");
-            if (p === ADMIN_PASS) {
-                localStorage.setItem('gym_admin', 'true');
-                alert("Доступ дозволено! Тепер ти можеш редагувати ДЗ.");
-                location.reload();
-            } else if (p !== null) {
-                alert("Невірний пароль!");
-            }
+            if (isAdmin) { if(confirm("Вимкнути редагування?")) { localStorage.removeItem('gym_admin'); location.reload(); } return; }
+            if (prompt("Пароль:") === ADMIN_PASS) { localStorage.setItem('gym_admin', 'true'); location.reload(); }
         }
 
         function updateDesktop() {
             const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('desktop-info').innerText = `Пилиповицька Гімназія | Клас: ${currentClass} ${isAdmin ? '[ADMIN]' : ''}`;
-            
-            // Звук дзвінка
+            document.getElementById('clock').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
             const curMin = now.getHours() * 60 + now.getMinutes();
             bellTimes.forEach(t => {
                 const [sh, sm] = t.s.split(':').map(Number);
@@ -143,79 +125,99 @@
                     lastBellMin = curMin;
                 }
             });
+            if(document.getElementById('btn-timer').classList.contains('active')) renderTimer(document.getElementById('win-content'));
         }
         setInterval(updateDesktop, 1000);
-        updateDesktop();
 
         function openApp(id) {
             const body = document.getElementById('win-content');
-            const title = document.getElementById('win-title');
             document.querySelectorAll('.task-icon').forEach(i => i.classList.remove('active'));
             document.getElementById('btn-'+id)?.classList.add('active');
-            
             document.getElementById('overlay').style.display = 'block';
             document.body.classList.add('window-open');
             setTimeout(() => document.getElementById('win-container').classList.add('active'), 10);
 
-            if (id === 'week') { title.innerText = "Розклад"; renderWeek(body); }
-            else if (id === 'timer') { title.innerText = "Уроки сьогодні"; renderTimer(body); }
-            else if (id === 'settings') { title.innerText = "Клас"; renderSettings(body); }
-            else if (id === 'grades') { title.innerText = "Оцінки"; renderGrades(body); }
-        }
-
-        function renderWeek(container) {
-            const sch = allSchedules[currentClass];
-            if(!sch) { container.innerHTML = "Розклад відсутній"; return; }
-            let html = "";
-            for(let d=1; d<=5; d++) {
-                const days = ["", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"];
-                html += `<h4 style="margin:15px 0 10px; color:var(--win-accent)">${days[d]}</h4>`;
-                sch[d].forEach(lesson => {
-                    const hw = localStorage.getItem('hw_'+lesson) || "Немає завдань";
-                    html += `
-                    <div class="card">
-                        <strong>${lesson}</strong>
-                        <div class="hw-area">
-                            ${isAdmin ? 
-                                `<input class="hw-input" value="${hw === 'Немає завдань' ? '' : hw}" placeholder="Записати ДЗ..." onchange="localStorage.setItem('hw_${lesson}', this.value)">` : 
-                                'ДЗ: ' + hw}
-                        </div>
-                    </div>`;
-                });
-            }
-            container.innerHTML = html;
+            if (id === 'week') { document.getElementById('win-title').innerText = "Розклад"; renderWeek(body); }
+            else if (id === 'timer') { document.getElementById('win-title').innerText = "Уроки"; renderTimer(body); }
+            else if (id === 'settings') { document.getElementById('win-title').innerText = "Клас"; renderSettings(body); }
+            else if (id === 'grades') { document.getElementById('win-title').innerText = "Оцінки"; renderGrades(body); }
         }
 
         function renderTimer(container) {
             const now = new Date();
-            const day = now.getDay();
+            let day = now.getDay();
+            if (viewTomorrow) day = (day === 5) ? 1 : day + 1; // Якщо п'ятниця, то завтра - понеділок
+
             const sch = allSchedules[currentClass];
-            if(!sch || !sch[day]) { container.innerHTML = "Сьогодні уроків немає 🥳"; return; }
-            
             const curMin = now.getHours() * 60 + now.getMinutes();
-            container.innerHTML = sch[day].map((lesson, i) => {
+            const curSec = now.getSeconds();
+
+            let headerHtml = `
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button class="tab-btn ${!viewTomorrow ? 'active' : ''}" onclick="viewTomorrow=false; renderTimer(document.getElementById('win-content'))">Сьогодні</button>
+                    <button class="tab-btn ${viewTomorrow ? 'active' : ''}" onclick="viewTomorrow=true; renderTimer(document.getElementById('win-content'))">Завтра</button>
+                </div>
+            `;
+
+            if(!sch || !sch[day] || day === 0 || day === 6) {
+                container.innerHTML = headerHtml + "<h4>Вихідний! Уроків немає 🥳</h4>";
+                return;
+            }
+
+            let countdownText = "";
+            let lessonHtml = sch[day].map((lesson, i) => {
                 const [sh, sm] = bellTimes[i].s.split(':').map(Number);
                 const [eh, em] = bellTimes[i].e.split(':').map(Number);
-                let status = (curMin >= eh*60+em) ? "status-passed" : (curMin >= sh*60+sm) ? "status-current" : "";
+                const start = sh*60+sm, end = eh*60+em;
+
+                let status = "status-future";
+                if (!viewTomorrow) {
+                    if (curMin >= end) status = "status-passed";
+                    else if (curMin >= start) {
+                        status = "status-current";
+                        const remain = end - curMin - 1;
+                        countdownText = `<span class="countdown">До кінця уроку: ${remain}хв ${60-curSec}с</span>`;
+                    } else if (i > 0 && curMin >= (bellTimes[i-1].e.split(':')[0]*60 + Number(bellTimes[i-1].e.split(':')[1])) && curMin < start) {
+                        const remain = start - curMin - 1;
+                        countdownText = `<span class="countdown" style="color:var(--status-future)">До початку уроку: ${remain}хв ${60-curSec}с</span>`;
+                    }
+                }
                 return `<div class="card ${status}"><b>${i+1}. ${lesson}</b><br><small>${bellTimes[i].s} - ${bellTimes[i].e}</small></div>`;
             }).join('');
+
+            container.innerHTML = headerHtml + countdownText + lessonHtml;
+        }
+
+        function renderWeek(container) {
+            const sch = allSchedules[currentClass];
+            if(!sch) { container.innerHTML = "Немає даних"; return; }
+            const days = ["", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"];
+            container.innerHTML = Object.keys(sch).map(d => `
+                <h4 style="margin:15px 0 10px; color:var(--win-accent)">${days[d]}</h4>
+                ${sch[d].map(l => {
+                    const hw = localStorage.getItem('hw_'+l) || "Немає завдань";
+                    return `<div class="card"><strong>${l}</strong><div style="font-size:12px; color:#666; margin-top:5px;">
+                        ${isAdmin ? `<input class="hw-input" value="${hw==='Немає завдань'?'':hw}" onchange="localStorage.setItem('hw_${l}', this.value)">` : 'ДЗ: ' + hw}
+                    </div></div>`;
+                }).join('')}
+            `).join('');
         }
 
         function renderSettings(container) {
-            container.innerHTML = `<h4>Твій клас: ${currentClass}</h4><br>` + ["5","6","7","8","9"].map(c => `
-                <button class="btn" style="background:${c === currentClass ? '#2ecc71' : ''}" onclick="localStorage.setItem('user_class', '${c}'); location.reload()">${c} Клас</button>
+            container.innerHTML = ["5","6","7","8","9"].map(c => `
+                <button class="btn" style="background:${c===currentClass?'var(--status-current)':''}" onclick="localStorage.setItem('user_class', '${c}'); location.reload()">${c} Клас</button>
             `).join('');
         }
 
         function renderGrades(container) {
             const sch = allSchedules[currentClass];
-            if(!sch) { container.innerHTML = "Оберіть клас"; return; }
+            if(!sch) return;
             let subs = [];
             Object.values(sch).forEach(d => d.forEach(s => { if(!subs.includes(s)) subs.push(s); }));
-            container.innerHTML = `<h5>Твої оцінки (локально):</h5><br>` + subs.map(s => `
+            container.innerHTML = subs.map(s => `
                 <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
                     <span>${s}</span>
-                    <input class="grade-input" type="number" style="width:50px" value="${localStorage.getItem('g_'+s)||''}" onchange="localStorage.setItem('g_${s}', this.value)">
+                    <input type="number" style="width:50px; padding:5px;" value="${localStorage.getItem('g_'+s)||''}" onchange="localStorage.setItem('g_${s}', this.value)">
                 </div>
             `).join('');
         }
@@ -223,7 +225,7 @@
         function closeApp() {
             document.getElementById('win-container').classList.remove('active');
             document.body.classList.remove('window-open');
-            setTimeout(() => document.getElementById('overlay').style.display = 'none', 400);
+            setTimeout(() => document.getElementById('overlay').style.display='none', 400);
         }
     </script>
 </body>
