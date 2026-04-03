@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Пилиповицька Гімназія</title>
-
+    
     <style>
         :root {
             --win-bg: #2c3e50;
@@ -13,11 +13,11 @@
             --taskbar-bg: rgba(15, 15, 15, 0.95);
             --text-light: #ffffff;
             --main-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --status-passed: #b2bec3; /* Сірий */
-            --status-future: #2ecc71; /* Зелений */
-            --status-current: #3498db; /* Синій */
+            --status-passed: #b2bec3;
+            --status-future: #2ecc71;
+            --status-current: #3498db;
             --window-bg: #f0f2f5;
-            --card-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         * { 
@@ -26,6 +26,8 @@
             padding: 0; 
             font-family: var(--main-font); 
             -webkit-tap-highlight-color: transparent;
+            scrollbar-width: thin;
+            scrollbar-color: var(--win-accent) transparent;
         }
 
         body {
@@ -50,6 +52,7 @@
             gap: 20px;
             z-index: 1000;
             border-right: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
         }
 
         .task-icon {
@@ -77,6 +80,16 @@
             box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
         }
 
+        .task-icon.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+        }
+
         .desktop-greeting {
             position: absolute;
             top: 45%;
@@ -101,6 +114,14 @@
             font-size: clamp(2.5rem, 8vw, 4.5rem);
             margin-bottom: 15px;
             font-weight: 800;
+            letter-spacing: -2px;
+        }
+
+        #live-clock {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: 300;
+            opacity: 0.9;
+            font-variant-numeric: tabular-nums;
         }
 
         .window-overlay {
@@ -113,6 +134,7 @@
             display: none;
             z-index: 500;
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             animation: fadeIn 0.4s ease;
         }
 
@@ -127,6 +149,7 @@
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            box-shadow: 25px 0 60px rgba(0,0,0,0.4);
         }
 
         .window-content.active { transform: translateX(0); }
@@ -140,81 +163,108 @@
             border-bottom: 1px solid #e1e4e8;
         }
 
-        .close-btn { font-size: 32px; color: #b2bec3; cursor: pointer; line-height: 1; }
+        .window-header h2 { font-size: 22px; font-weight: 700; color: #1e272e; }
 
-        .window-body { flex: 1; overflow-y: auto; padding: 25px; }
+        .close-btn { 
+            font-size: 32px; 
+            color: #b2bec3; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #ff4757; transform: rotate(90deg); }
 
-        /* ВЕЛИКІ КАРТКИ З КОЛЬОРАМИ */
+        .window-body { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 25px; 
+            background: #fdfdfd;
+        }
+
         .lesson-card {
             background: #ffffff;
-            padding: 25px 20px;
+            padding: 18px;
             margin-bottom: 15px;
-            border-radius: 20px;
-            border-left: 10px solid;
-            position: relative;
-            transition: all 0.3s ease;
+            border-radius: 16px;
+            border-left: 8px solid #dfe6e9;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--card-shadow);
         }
 
-        .lesson-card.status-passed { border-left-color: var(--status-passed); opacity: 0.7; }
-        .lesson-card.status-future { border-left-color: var(--status-future); }
+        .lesson-card.status-passed { border-left-color: var(--status-passed); opacity: 0.65; background: #f1f2f6; }
         .lesson-card.status-current { 
             border-left-color: var(--status-current); 
-            background: #e3f2fd;
-            transform: scale(1.02);
+            background: #f1f9ff; 
+            transform: scale(1.02); 
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.15); 
+        }
+        .lesson-card.status-future { border-left-color: var(--status-future); background: #f2fff7; }
+
+        .lesson-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .lesson-name { font-weight: 800; color: #2d3436; font-size: 17px; }
+        .lesson-time { font-size: 13px; color: #7f8c8d; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 20px; }
+
+        .homework-box {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #576574;
+            border: 1px solid #eee;
+            line-height: 1.5;
+            position: relative;
         }
 
-        .lesson-name { font-weight: 800; color: #2d3436; font-size: 18px; }
-
-        /* ЧАС В ОВАЛІ (ПРАВИЙ НИЖНІЙ КУТ) */
-        .lesson-time-badge {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.05);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #636e72;
+        .homework-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            color: #2d3436;
         }
 
-        /* ТАЙМЕР ВГОРІ */
         .timer-display {
-            background: var(--win-accent);
-            color: white;
-            border-radius: 25px;
+            background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+            border-radius: 20px;
             padding: 30px;
             text-align: center;
             margin-bottom: 25px;
-            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.03);
         }
-        .timer-big { font-size: 52px; font-weight: 900; line-height: 1; }
-        .timer-status { font-size: 13px; font-weight: 700; opacity: 0.9; margin-top: 5px; }
 
-        .hw-input { width: 100%; border: 1px solid #ddd; padding: 8px; border-radius: 8px; margin-top: 10px; outline: none; }
-        .btn-class { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--win-accent); color: white; margin-bottom: 10px; cursor: pointer; font-weight: bold; }
+        .timer-big { font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin: 10px 0; }
+        .timer-status { font-size: 12px; color: #a4b0be; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+
+        /* Стилі для форми логіну та оцінок */
+        .grade-input { width: 60px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; margin-top: 5px; }
 
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
-            .taskbar { width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid rgba(255,255,255,0.1); }
-            .window-overlay { left: 0; bottom: 70px; }
+            .taskbar { 
+                width: 100%; height: 75px; 
+                flex-direction: row; justify-content: space-around; 
+                padding: 0 15px; border-right: none; border-top: 1px solid rgba(255,255,255,0.1); 
+            }
+            .window-overlay { left: 0; bottom: 75px; }
+            .window-content { max-width: 100%; border-radius: 30px 30px 0 0; }
         }
     </style>
 </head>
-<body>
+<body id="app-shell">
 
     <nav class="taskbar">
-        <div class="task-icon" id="btn-today" onclick="openApp('today')">🔔</div>
+        <div class="task-icon" id="btn-timer" onclick="openApp('timer')">🔔</div>
         <div class="task-icon" id="btn-tomorrow" onclick="openApp('tomorrow')">📅</div>
         <div class="task-icon" id="btn-full" onclick="openApp('full')">📖</div>
         <div class="task-icon" id="btn-settings" onclick="openApp('settings')">🏫</div>
-        <div class="task-icon" style="margin-top:auto; opacity:0.2;" onclick="adminGate()">🔑</div>
+        <div class="task-icon" style="margin-top:auto; opacity:0.1;" onclick="adminGate()">🔑</div>
     </nav>
 
     <div class="desktop-greeting">
-        <h1 id="live-clock">00:00</h1>
-        <p>Пилиповицька Гімназія — 6 Клас</p>
+        <h1 id="school-name">Пилиповицька Гімназія</h1>
+        <p id="live-clock">Завантаження...</p>
     </div>
 
     <div class="window-overlay" id="overlay" onclick="closeApp()">
@@ -223,16 +273,34 @@
                 <h2 id="win-title">Вікно</h2>
                 <div class="close-btn" onclick="closeApp()">&times;</div>
             </div>
-            <div class="window-body" id="win-content"></div>
+            <div class="window-body" id="win-render-area"></div>
         </div>
     </div>
+
+    <script src="ai.js"></script>
+
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Робимо змінні доступними для звичайного скріпта нижче
+        window.auth = auth;
+        window.db = db;
+        window.fb = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, doc, setDoc, getDoc };
+    </script>
 
     <script>
         const ADMIN_PASS = "br.m.airways@gmail.com";
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
-        let currentClass = localStorage.getItem('user_class') || "6";
-        const bellSound = new Audio('GO.mp3');
-        let lastBellMin = null;
+        const bellSound = new Audio('GO.mp3'); 
+        let lastState = null;
+
+        const schedule = {
+            1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
+            2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
+            3: { name: "Середа", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
+            4: { name: "Четвер", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
+            5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Математика", "Природа", "Історія", "Математика"] }
+        };
 
         const bellTimes = [
             {s: "08:30", e: "09:15"}, {s: "09:25", e: "10:10"},
@@ -241,149 +309,177 @@
             {s: "14:00", e: "14:45"}, {s: "14:50", e: "15:35"}
         ];
 
-        const schedule = {
-            "6": {
-                1: ["Укр. мова", "Математика", "Математика", "Укр. літ.", "Мистецтво", "Географія"],
-                2: ["Фізкультура", "Англ. мова", "Історія", "Англ. мова", "Заруб. літ.", "Інформатика"],
-                3: ["Укр. мова", "Укр. літ.", "Технології", "Технології", "Математика", "Музика", "Географія"],
-                4: ["Англ. мова", "Укр. мова", "Укр. мова", "Заруб. літ.", "Фізкультура", "Англ. мова", "Фізкультура"],
-                5: ["Основи здоров'я", "Математика", "Природа", "Історія", "Математика"]
-            }
-        };
-
-        function updateClock() {
+        setInterval(() => {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
-            document.getElementById('live-clock').innerText = timeStr;
-            
-            const curMin = now.getHours() * 60 + now.getMinutes();
-            
-            // ЗВУК ТІЛЬКИ НА ПОЧАТКУ УРОКУ
-            bellTimes.forEach(t => {
-                const [sh, sm] = t.s.split(':').map(Number);
-                if (curMin === (sh*60 + sm) && lastBellMin !== curMin) {
-                    bellSound.play().catch(e => console.log("Чекаю взаємодії для звуку"));
-                    lastBellMin = curMin;
-                }
-            });
-
-            if(document.getElementById('btn-today').classList.contains('active')) renderToday();
-        }
-        setInterval(updateClock, 1000);
+            const clock = document.getElementById('live-clock');
+            if(clock) clock.innerText = now.toLocaleTimeString('uk-UA');
+        }, 1000);
 
         function openApp(id) {
-            document.querySelectorAll('.task-icon').forEach(i => i.classList.remove('active'));
-            document.getElementById('btn-'+id)?.classList.add('active');
-            document.getElementById('overlay').style.display = 'block';
-            document.body.classList.add('window-open');
-            setTimeout(() => document.getElementById('win-container').classList.add('active'), 10);
-
-            const area = document.getElementById('win-content');
+            const area = document.getElementById('win-render-area');
             const title = document.getElementById('win-title');
-
-            if(id === 'today') { title.innerText = "Сьогодні"; renderToday(); }
-            if(id === 'tomorrow') { title.innerText = "Завтра"; renderTomorrow(); }
-            if(id === 'full') { title.innerText = "Тиждень"; renderWeek(); }
-            if(id === 'settings') { title.innerText = "Клас"; renderSettings(); }
-        }
-
-        function renderToday() {
-            const area = document.getElementById('win-content');
-            const now = new Date();
-            const day = now.getDay();
-            const curMin = now.getHours() * 60 + now.getMinutes();
-            const curSec = now.getSeconds();
-            const lessons = schedule[currentClass][day];
-
-            if(!lessons || day === 0 || day === 6) {
-                area.innerHTML = "<h3>Сьогодні вихідний! 🥳</h3>"; return;
-            }
-
-            let timerHtml = "";
-            let allDone = true;
-
-            const cards = lessons.map((name, i) => {
-                const [sh, sm] = bellTimes[i].s.split(':').map(Number);
-                const [eh, em] = bellTimes[i].e.split(':').map(Number);
-                const start = sh*60+sm, end = eh*60+em;
-
-                let status = "status-future";
-                if(curMin >= end) status = "status-passed";
-                else {
-                    allDone = false;
-                    if(curMin >= start) {
-                        status = "status-current";
-                        const m = end - curMin - 1, s = 60 - curSec;
-                        timerHtml = `<div class="timer-display"><div class="timer-big">00:${m<10?'0'+m:m}:${s<10?'0'+s:s}</div><div class="timer-status">До кінця уроку</div></div>`;
-                    } else if (i > 0 && curMin < start && curMin >= (bellTimes[i-1].e.split(':')[0]*60 + Number(bellTimes[i-1].e.split(':')[1]))) {
-                        const m = start - curMin - 1, s = 60 - curSec;
-                        timerHtml = `<div class="timer-display" style="background:#2ecc71"><div class="timer-big">00:${m<10?'0'+m:m}:${s<10?'0'+s:s}</div><div class="timer-status">До початку уроку</div></div>`;
-                    }
-                }
-
-                return `<div class="lesson-card ${status}"><div class="lesson-name">${i+1}. ${name}</div><div class="lesson-time-badge">${bellTimes[i].s} - ${bellTimes[i].e}</div></div>`;
-            }).join('');
-
-            if(allDone) {
-                timerHtml = `<div class="timer-display" style="background:#b2bec3"><div class="timer-big">00:00:00</div><div class="timer-status">На сьогодні все! ✅</div></div>`;
-            }
-
-            area.innerHTML = timerHtml + cards;
-        }
-
-        function renderTomorrow() {
-            const area = document.getElementById('win-content');
-            let next = new Date().getDay() + 1;
-            if(next > 5) next = 1;
-            const lessons = schedule[currentClass][next];
-            const names = ["", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"];
-
-            area.innerHTML = `<h3>Розклад на ${names[next]}</h3><br>` + lessons.map((name, i) => `
-                <div class="lesson-card status-future">
-                    <div class="lesson-name">${i+1}. ${name}</div>
-                    <div class="lesson-time-badge">${bellTimes[i].s} - ${bellTimes[i].e}</div>
+            
+            document.querySelectorAll('.task-icon').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-'+id)?.classList.add('active');
+            
+            if(window.appInterval) clearInterval(window.appInterval);
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('app-shell').classList.add('window-open');
+            
+            setTimeout(() => document.getElementById('win-container').classList.add('active'), 20);
+            if (id === 'classes') {
+                title.innerText = "Обери свій клас";
+                area.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="auth-btn" onclick="setMyClass('5')">5 Клас</button>
+                <button class="auth-btn" onclick="setMyClass('6')">6 Клас</button>
+                <button class="auth-btn" onclick="setMyClass('7')">7 Клас</button>
+                <button class="auth-btn" onclick="setMyClass('8')">8 Клас</button>
+                <button class="auth-btn" onclick="setMyClass('9')">9 Клас</button>
                 </div>
-            `).join('');
-        }
+                `;
+            }
+            // Функція для збереження класу
+            window.setMyClass = function(c) {
+                localStorage.setItem('user_class', c);
+                location.reload();
+            };
 
-        function renderWeek() {
-            const area = document.getElementById('win-content');
-            const names = ["", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"];
-            area.innerHTML = [1,2,3,4,5].map(d => `
-                <h4 style="margin: 20px 0 10px; color: var(--win-accent);">${names[d]}</h4>
-                ${schedule[currentClass][d].map((l, i) => {
-                    const hw = localStorage.getItem('hw_'+l) || "Завдань немає";
-                    return `
-                    <div class="lesson-card status-future" style="padding-bottom: 45px;">
-                        <div class="lesson-name">${l}</div>
-                        <div style="font-size:13px; color:#636e72; margin-top:5px;">
-                            ${isEditMode ? `<input class="hw-input" value="${hw==='Завдань немає'?'':hw}" onchange="localStorage.setItem('hw_${l}', this.value)">` : 'ДЗ: '+hw}
-                        </div>
-                        <div class="lesson-time-badge">${bellTimes[i].s} - ${bellTimes[i].e}</div>
-                    </div>`;
-                }).join('')}
-            `).join('');
-        }
-
-        function renderSettings() {
-            const area = document.getElementById('win-content');
-            area.innerHTML = ["5","6","7","8","9"].map(c => `
-                <button class="btn-class" style="background:${c===currentClass?'#3498db':''}" 
-                onclick="localStorage.setItem('user_class', '${c}'); location.reload()">${c} Клас</button>
-            `).join('');
-        }
-
-        function adminGate() {
-            const p = prompt("Пароль адміністратора:");
-            if(p === ADMIN_PASS) { localStorage.setItem('gym_admin', 'true'); location.reload(); }
-            else if(p === "off") { localStorage.removeItem('gym_admin'); location.reload(); }
+            switch(id) {
+                case 'timer':
+                    title.innerText = "Поточний статус";
+                    startTimerModule(area);
+                    break;
+                case 'tomorrow':
+                    title.innerText = "Завдання на завтра";
+                    let d = new Date().getDay();
+                    let targetDay = (d >= 5 || d === 0) ? 1 : d + 1;
+                    area.innerHTML = renderDayUI(targetDay, false);
+                    break;
+                case 'full':
+                    title.innerText = "Розклад на тиждень";
+                    area.innerHTML = [1,2,3,4,5].map(i => renderDayUI(i, false)).join('');
+                    break;
+                case 'grades':
+                    title.innerText = "Нові знання";
+                    renderGrades(area);
+                    break;
+                case 'ai':
+                    title.innerText = "AI Асистент";
+                    if(typeof launchChat === 'function') launchChat(area);
+                    break;
+            }
         }
 
         function closeApp() {
             document.getElementById('win-container').classList.remove('active');
-            document.body.classList.remove('window-open');
-            setTimeout(() => document.getElementById('overlay').style.display='none', 400);
+            document.getElementById('app-shell').classList.remove('window-open');
+            document.querySelectorAll('.task-icon').forEach(el => el.classList.remove('active'));
+            setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 400);
         }
+
+        function renderDayUI(dayIdx, isLive) {
+            const data = schedule[dayIdx];
+            if(!data) return '';
+            const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+            
+            let html = `<div style="margin: 30px 0 15px; display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:24px; font-weight:900; color:var(--win-accent)">${data.name}</span>
+                            <div style="flex:1; height:2px; background:#eee;"></div>
+                        </div>`;
+            
+            data.lessons.forEach((name, i) => {
+                let status = "status-future";
+                if(isLive && bellTimes[i]) {
+                    const [sh, sm] = bellTimes[i].s.split(':').map(Number);
+                    const [eh, em] = bellTimes[i].e.split(':').map(Number);
+                    const startTotal = sh*60 + sm;
+                    const endTotal = eh*60 + em;
+                    if(nowMin >= endTotal) status = "status-passed";
+                    else if(nowMin >= startTotal) status = "status-current";
+                }
+                
+                const hw = localStorage.getItem('hw_' + name) || "Не записано";
+                html += `
+                <div class="lesson-card ${status}">
+                    <div class="lesson-info">
+                        <span class="lesson-name">${i+1}. ${name}</span>
+                        <span class="lesson-time">${bellTimes[i]?.s || '--'} - ${bellTimes[i]?.e || '--'}</span>
+                    </div>
+                    <div class="homework-box">
+                        ${isEditMode ? `<input type="text" class="homework-input" value="${hw === 'Не записано' ? '' : hw}" 
+                            placeholder="ДЗ: Введіть завдання..."
+                            onchange="localStorage.setItem('hw_${name}', this.value || 'Не записано')">` : 'ДЗ: ' + hw}
+                    </div>
+                </div>`;
+            });
+            return html;
+        }
+
+        function startTimerModule(container) {
+            const update = () => {
+                const now = new Date();
+                const day = now.getDay();
+                const curSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+                let found = false;
+                let timerHtml = "";
+
+                const activeDay = (day === 0 || day === 6) ? 1 : day;
+
+                for(let i=0; i < bellTimes.length; i++) {
+                    const [sh, sm] = bellTimes[i].s.split(':').map(Number);
+                    const [eh, em] = bellTimes[i].e.split(':').map(Number);
+                    const s = sh*3600 + sm*60, e = eh*3600 + em*60;
+
+                    if(curSec >= s && curSec < e) {
+                        if (lastState !== "L" + i) { 
+                            bellSound.play().catch(() => {}); 
+                            lastState = "L" + i; 
+                        }
+                        timerHtml = renderTimerUI("До кінця уроку", e - curSec, "#3498db");
+                        found = true; break;
+                    } else if (i < bellTimes.length - 1) {
+                        const [nsh, nsm] = bellTimes[i+1].s.split(':').map(Number);
+                        const ns = nsh*3600 + nsm*60;
+                        if(curSec >= e && curSec < ns) {
+                            timerHtml = renderTimerUI("До початку уроку", ns - curSec, "#2ecc71");
+                            if (lastState !== "B" + i) lastState = "B" + i;
+                            found = true; break;
+                        }
+                    }
+                }
+                if(!found) {
+                    timerHtml = renderTimerUI("Уроки закінчились", null, "#7f8c8d");
+                    lastState = "off"; 
+                }
+                container.innerHTML = timerHtml + renderDayUI(activeDay, true);
+            };
+            update(); window.appInterval = setInterval(update, 1000);
+        }
+
+        function renderTimerUI(status, sec, col) {
+            let time = "--:--";
+            if(sec !== null) {
+                const m = Math.floor(sec/60), s = sec%60;
+                time = `${m}:${s.toString().padStart(2,'0')}`;
+            }
+            return `<div class="timer-display">
+                        <div class="timer-status">${status}</div>
+                        <div class="timer-big" style="color:${col}">${time}</div>
+                    </div>`;
+        }
+
+        function adminGate() {
+            const p = prompt("Пароль адміністратора:");
+            if(p === ADMIN_PASS) { 
+                localStorage.setItem('gym_admin', 'true'); 
+                location.reload(); 
+            } else if (p === "off") {
+                localStorage.removeItem('gym_admin');
+                location.reload();
+            }
+        }
+        window.schedule = schedule;
     </script>
 </body>
 </html>
