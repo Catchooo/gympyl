@@ -311,15 +311,21 @@
         let isEditMode = localStorage.getItem('gym_admin') === 'true';
         const bellSound = new Audio('GO.mp3'); 
         let lastState = null;
+        
+        const currentClass = localStorage.getItem('user_class') || '6';
+        const allSchedules = {
+            "6": {
+                1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
+                2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
+                3: { name: "Середа", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
+                4: { name: "Четвер", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
+                5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Основи здоров'я", "Математика", "Природа", "Історія", "Математика"] }
+            }
+    // Розклади для 5, 7, 8, 9 класів поки не додаємо, скрипт це зрозуміє
+                };
 
-        const schedule = {
-            1: { name: "Понеділок", lessons: ["Українська мова", "Математика", "Математика", "Українська література", "Мистецтво", "Географія"] },
-            2: { name: "Вівторок", lessons: ["Фізкультура", "Англійська мова", "Історія", "Англійська мова", "Зарубіжна література", "Інформатика"] },
-            3: { name: "Середа", lessons: ["Українська мова", "Українська література", "Технології", "Технології", "Математика", "Музика", "Географія"] },
-            4: { name: "Четвер", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
-            5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Основи здоров'я", "Математика", "Природа", "Історія", "Математика"] }
-        };
 
+        window.allSchedules = allSchedules;
         const bellTimes = [
             {s: "08:30", e: "09:15"}, {s: "09:25", e: "10:10"},
             {s: "10:30", e: "11:15"}, {s: "11:25", e: "12:10"},
@@ -397,17 +403,32 @@
             document.querySelectorAll('.task-icon').forEach(el => el.classList.remove('active'));
             setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 400);
         }
-
         function renderDayUI(dayIdx, isLive) {
-            const data = schedule[dayIdx];
-            if(!data) return '';
-            const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-            
+            const classSchedule = allSchedules[currentClass];
+    
+    // Щоб знати назву дня, навіть якщо розкладу немає
+            const dayNames = {1: "Понеділок", 2: "Вівторок", 3: "Середа", 4: "Четвер", 5: "П'ятниця"};
+            const dayName = (classSchedule && classSchedule[dayIdx]) ? classSchedule[dayIdx].name : dayNames[dayIdx];
+
+    // Заголовок дня з вказівкою класу
+    
             let html = `<div style="margin: 30px 0 15px; display:flex; align-items:center; gap:10px;">
-                            <span style="font-size:24px; font-weight:900; color:var(--win-accent)">${data.name}</span>
-                            <div style="flex:1; height:2px; background:#eee;"></div>
-                        </div>`;
-            
+                    <span style="font-size:24px; font-weight:900; color:var(--win-accent)">${dayName} (${currentClass} клас)</span>
+                    <div style="flex:1; height:2px; background:#eee;"></div>
+                </div>`;
+
+    // Якщо розкладу для цього класу чи дня немає — виводимо повідомлення
+    
+            if (!classSchedule || !classSchedule[dayIdx]) {
+                return html + `<div style="text-align:center; padding: 25px; color: #7f8c8d; font-size: 16px; font-weight: bold; background: white; border-radius: 16px; border: 2px dashed #dfe6e9;">Розкладу ще немає... 😢</div>`;
+            }
+
+    // Якщо розклад є, малюємо уроки як зазвичай
+    
+            const data = classSchedule[dayIdx];
+            const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    
+
             data.lessons.forEach((name, i) => {
                 let status = "status-future";
                 if(isLive && bellTimes[i]) {
@@ -418,20 +439,24 @@
                     if(nowMin >= endTotal) status = "status-passed";
                     else if(nowMin >= startTotal) status = "status-current";
                 }
-                
-                const hw = localStorage.getItem('hw_' + name) || "Не записано";
+        
+        // Робимо унікальний ключ для ДЗ: клас + назва уроку
+        
+                const hwKey = `hw_${currentClass}_${name}`;
+                const hw = localStorage.getItem(hwKey) || "Не записано";
                 html += `
-                <div class="lesson-card ${status}">
-                    <div class="lesson-info">
-                        <span class="lesson-name">${i+1}. ${name}</span>
-                        <span class="lesson-time">${bellTimes[i]?.s || '--'} - ${bellTimes[i]?.e || '--'}</span>
-                    </div>
-                    <div class="homework-box">
-                        ${isEditMode ? `<input type="text" class="homework-input" value="${hw === 'Не записано' ? '' : hw}" 
-                            placeholder="ДЗ: Введіть завдання..."
-                            onchange="localStorage.setItem('hw_${name}', this.value || 'Не записано')">` : 'ДЗ: ' + hw}
-                    </div>
-                </div>`;
+        <div class="lesson-card ${status}">
+            <div class="lesson-info">
+                <span class="lesson-name">${i+1}. ${name}</span>
+                <span class="lesson-time">${bellTimes[i]?.s || '--'} - ${bellTimes[i]?.e || '--'}</span>
+            </div>
+            <div class="homework-box">
+                ${isEditMode ? `<input type="text" class="homework-input" value="${hw === 'Не записано' ? '' : hw}" 
+                    placeholder="ДЗ: Введіть завдання..."
+                    onchange="localStorage.setItem('${hwKey}', this.value || 'Не записано')">` : 'ДЗ: ' + hw}
+           
+            </div>
+        </div>`;
             });
             return html;
         }
