@@ -238,7 +238,6 @@
         .timer-big { font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin: 10px 0; }
         .timer-status { font-size: 12px; color: #a4b0be; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
 
-        /* Стилі для форми логіну та оцінок */
         .grade-input { width: 60px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; margin-top: 5px; }
         .auth-btn {
             background: var(--win-accent);
@@ -293,11 +292,9 @@
 
     <script>
         try {
-            // Передбачається, що getAuth, getFirestore та app підключені вище або в ai.js
             const auth = getAuth(app);
             const db = getFirestore(app);
-
-            // Робимо змінні доступними для звичайного скріпта нижче
+            
             window.auth = auth;
             window.db = db;
             window.fb = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, doc, setDoc, getDoc };
@@ -321,7 +318,7 @@
                 4: { name: "Четвер", lessons: ["Англійська мова", "Українська мова", "Українська мова", "Зарубіжна література", "Фізкультура", "Англійська мова", "Фізкультура"] },
                 5: { name: "П'ятниця", lessons: ["Основи здоров'я", "Основи здоров'я", "Математика", "Природа", "Історія", "Математика"] }
             }
-    // Розклади для 5, 7, 8, 9 класів поки не додаємо, скрипт це зрозуміє
+
                 };
 
 
@@ -365,7 +362,7 @@
                 `;
             }
 
-            // Функція для збереження класу
+           
             window.setMyClass = function(c) {
                 localStorage.setItem('user_class', c);
                 location.reload();
@@ -406,24 +403,24 @@
         function renderDayUI(dayIdx, isLive) {
             const classSchedule = allSchedules[currentClass];
     
-    // Щоб знати назву дня, навіть якщо розкладу немає
+    
             const dayNames = {1: "Понеділок", 2: "Вівторок", 3: "Середа", 4: "Четвер", 5: "П'ятниця"};
             const dayName = (classSchedule && classSchedule[dayIdx]) ? classSchedule[dayIdx].name : dayNames[dayIdx];
 
-    // Заголовок дня з вказівкою класу
+    
     
             let html = `<div style="margin: 30px 0 15px; display:flex; align-items:center; gap:10px;">
                     <span style="font-size:24px; font-weight:900; color:var(--win-accent)">${dayName} (${currentClass} клас)</span>
                     <div style="flex:1; height:2px; background:#eee;"></div>
                 </div>`;
 
-    // Якщо розкладу для цього класу чи дня немає — виводимо повідомлення
+    
     
             if (!classSchedule || !classSchedule[dayIdx]) {
                 return html + `<div style="text-align:center; padding: 25px; color: #7f8c8d; font-size: 16px; font-weight: bold; background: white; border-radius: 16px; border: 2px dashed #dfe6e9;">Розкладу ще немає... 😢</div>`;
             }
 
-    // Якщо розклад є, малюємо уроки як зазвичай
+
     
             const data = classSchedule[dayIdx];
             const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
@@ -440,7 +437,7 @@
                     else if(nowMin >= startTotal) status = "status-current";
                 }
         
-        // Робимо унікальний ключ для ДЗ: клас + назва уроку
+       
         
                 const hwKey = `hw_${currentClass}_${name}`;
                 const hw = localStorage.getItem(hwKey) || "Не записано";
