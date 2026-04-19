@@ -46,8 +46,7 @@
             overflow: hidden;
             position: relative;
             color: #2d3436;
-            <img src="67.png" id="egg-67" class="easter-egg-67">
-            <img src="eps.png" id="egg-full" class="easter-egg-full">
+            
         }
 
         .easter-egg-67 {
@@ -197,6 +196,7 @@
             transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: auto !important;
         }
+            
             .desktop-greeting h1 {
                 cursor: pointer;
                 user-select: none; /* Щоб текст не виділявся синім при швидких кліках */
@@ -362,6 +362,8 @@
     </style>
 </head>
 <body id="app-shell">
+    <img src="67.png" id="egg-67" class="easter-egg-67">
+    <img src="eps.png" id="egg-full" class="easter-egg-full">
 
     <nav class="taskbar">
         <div class="task-icon" id="btn-timer" onclick="openApp('timer')">🔔</div>
@@ -668,6 +670,48 @@
             }
         }
         window.schedule = schedule;
+
+        let clickCount = 0;
+        
+        const schoolTitle = document.getElementById('school-name');
+        
+        if (schoolTitle) {
+            schoolTitle.onclick = function() {
+                clickCount++;
+                console.log("Кліків по заголовку:", clickCount); // Для перевірки в консолі F12
+
+        if (clickCount === 5) {
+            activateEasterEgg(); // Викликаємо твою функцію
+            clickCount = 0;      // Скидаємо лічильник
+        }
+
+        // Якщо не клікнути 5 разів за 3 секунди - лічильник скинеться
+        clearTimeout(window.clickTimer);
+        window.clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 3000);
+            };
+        }
+
+        let count = 0;
+        document.getElementById('school-name').onclick = () => {
+            count++;
+            if (count === 5) {
+                const e67 = document.getElementById('egg-67');
+                const ef = document.getElementById('egg-full');
+                
+                e67.classList.add('active');
+                
+                setTimeout(() => {
+                    e67.classList.remove('active');
+                    ef.style.display = 'block';
+                    setTimeout(() => { ef.style.display = 'none'; }, 5000);
+                }, 2000);
+                count = 0;
+            }
+        };
+
+        }
     </script>
             <div class="footer-credits">
         <span style="font-style: italic;">© 2026 All Rights Reserved. Early - acess</span>
