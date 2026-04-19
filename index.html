@@ -40,13 +40,51 @@
 
         body {
             background: url('https://kokl.ua/wp-content/uploads/2025/10/ostriv-epshtejna-scaled.jpg') center/cover no-repeat fixed;
-            height: 100vh;  /* Залишаємо як фолбек для старих браузерів */
+            height: 100vh; 
             height: 100dvh;
             display: flex;
             overflow: hidden;
             position: relative;
             color: #2d3436;
+            <img src="67.png" id="egg-67" class="easter-egg-67">
+            <img src="eps.png" id="egg-full" class="easter-egg-full">
         }
+
+        .easter-egg-67 {
+            position: fixed;
+            bottom: -100%; /* Початково схована знизу */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px; /* Можеш змінити розмір */
+            z-index: 9999;
+            transition: bottom 1s ease-out;
+            pointer-events: none;
+        }
+        
+        @keyframes shake-and-slide {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(15deg); }
+            50% { transform: translateX(-50%) rotate(-15deg); }
+            75% { transform: translateX(-50%) rotate(15deg); }
+            100% { transform: translateX(-50%) rotate(0deg); }
+        }
+        .easter-egg-67.active {
+            bottom: 20%; /* Випливає до середини (нижче центру) */
+            animation: shake-and-slide 0.5s infinite;
+        }
+        
+        .easter-egg-full {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 10000;
+            display: none;
+            object-fit: contain;
+        }
+        
 
         .taskbar {
             width: 75px;
@@ -431,7 +469,41 @@
                 `;
             }
 
-           
+           let clickCount = 0;
+            
+            const schoolTitle = document.getElementById('school-name');
+            
+            if (schoolTitle) {
+                schoolTitle.style.pointerEvents = "auto"; // Робимо заголовок клікабельним
+                schoolTitle.addEventListener('click', () => {
+                    clickCount++;
+        
+        if (clickCount === 5) {
+            activateEasterEgg();
+            clickCount = 0; // Скидаємо лічильник
+        }
+        
+        // Скидаємо лічильник, якщо людина довго не клікає (наприклад, через 2 секунди)
+                    setTimeout(() => { if(clickCount < 5) clickCount = 0; }, 2000);
+                });
+            }
+            function activateEasterEgg() {
+                const img67 = document.getElementById('egg-67');
+                const imgFull = document.getElementById('egg-full');
+                
+                img67.classList.add('active');
+                
+                setTimeout(() => {
+                    img67.classList.remove('active'); 
+                    imgFull.style.display = 'block';  
+                    
+                    setTimeout(() => {
+                        imgFull.style.display = 'none';
+                    }, 5000);
+                
+                }, 1500);
+            
+            }
             window.setMyClass = function(c) {
                 localStorage.setItem('user_class', c);
                 location.reload();
