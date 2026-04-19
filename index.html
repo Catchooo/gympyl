@@ -658,7 +658,6 @@
                         <div class="timer-big" style="color:${col}">${time}</div>
                     </div>`;
         }
-
         function adminGate() {
             const p = prompt("Пароль адміністратора:");
             if(p === ADMIN_PASS) { 
@@ -669,56 +668,43 @@
                 location.reload();
             }
         }
-        window.schedule = schedule;
 
-        let clickCount = 0;
-        
+        // --- ВЕЛИКДЕНЬ (ПАСХАЛКА) ---
+        let count = 0;
+        let clickTimer;
+
         const schoolTitle = document.getElementById('school-name');
-        
         if (schoolTitle) {
-            schoolTitle.onclick = function() {
-                clickCount++;
-                console.log("Кліків по заголовку:", clickCount); // Для перевірки в консолі F12
+            schoolTitle.onclick = () => {
+                count++;
+                clearTimeout(clickTimer);
+                
+                // Скидаємо лічильник, якщо пауза між кліками > 2 сек
+                clickTimer = setTimeout(() => { count = 0; }, 2000);
 
-        if (clickCount === 5) {
-            activateEasterEgg(); // Викликаємо твою функцію
-            clickCount = 0;      // Скидаємо лічильник
-        }
-
-        // Якщо не клікнути 5 разів за 3 секунди - лічильник скинеться
-        clearTimeout(window.clickTimer);
-        window.clickTimer = setTimeout(() => {
-            clickCount = 0;
-        }, 3000);
+                if (count === 5) {
+                    const e67 = document.getElementById('egg-67');
+                    const ef = document.getElementById('egg-full');
+                    
+                    e67.classList.add('active'); 
+                    
+                    setTimeout(() => {
+                        e67.classList.remove('active');
+                        ef.style.display = 'block';
+                        setTimeout(() => { ef.style.display = 'none'; }, 5000);
+                    }, 2000);
+                    
+                    count = 0;
+                }
             };
         }
-
-        let count = 0;
-        document.getElementById('school-name').onclick = () => {
-            count++;
-            if (count === 5) {
-                const e67 = document.getElementById('egg-67');
-                const ef = document.getElementById('egg-full');
-                
-                e67.classList.add('active');
-                
-                setTimeout(() => {
-                    e67.classList.remove('active');
-                    ef.style.display = 'block';
-                    setTimeout(() => { ef.style.display = 'none'; }, 5000);
-                }, 2000);
-                count = 0;
-            }
-        };
-
-        }
     </script>
-            <div class="footer-credits">
-        <span style="font-style: italic;">© 2026 All Rights Reserved. Early - acess</span>
+
+    <div class="footer-credits">
+        <span style="font-style: italic;">© 2026 All Rights Reserved. Early - access</span>
         <a href="https://mail.google.com/mail/?view=cm&fs=1&to=br.m.airways@gmail.com" target="_blank" class="google-mail-btn">
             <img src="google.png" alt="Google">
         </a>
     </div>
-
 </body>
 </html>
