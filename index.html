@@ -195,8 +195,13 @@
             z-index: 5;
             width: 85%;
             transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
+            pointer-events: auto;
         }
+            .desktop-greeting h1 {
+                cursor: pointer;
+                user-select: none; /* Щоб текст не виділявся синім при швидких кліках */
+                display: inline-block; /* Щоб область кліку була тільки на буквах */
+            }
 
         body.window-open .desktop-greeting {
             opacity: 0;
