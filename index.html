@@ -359,6 +359,36 @@
             .window-overlay { left: 0; bottom: 75px; }
             .window-content { max-width: 100%; border-radius: 30px 30px 0 0; }
         }
+        .origami-exit {
+            animation: origamiFoldAndFly 1.5s forwards cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            transform-origin: center bottom; 
+        }
+        
+        @keyframes origamiFoldAndFly {
+            0% {
+                transform: scale(1) rotateX(0deg) translateX(0);
+                opacity: 1;
+                filter: blur(0);
+            }
+            
+            30% {
+                transform: scaleX(0.1) scaleY(1) rotateX(10deg) translateX(0);
+                opacity: 1;
+                filter: blur(1px);
+            }
+            
+            60% {
+                transform: scaleX(0.02) scaleY(0.1) rotateX(90deg) rotateZ(-20deg) translateX(0);
+                opacity: 0.8;
+                filter: blur(2px);
+            }
+            
+            100% {
+                transform: scaleX(0) scaleY(0) rotateX(180deg) rotateZ(-90deg) translateX(100vw) translateY(-100vh);
+                opacity: 0;
+                filter: blur(10px);
+            }
+        }
     </style>
 </head>
 <body id="app-shell">
