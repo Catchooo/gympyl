@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тиждень - Пилиповицька Гімназія</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Додатковий стиль для зручності перегляду всього тижня */
+        .window-body {
+            padding-bottom: 50px;
+        }
+        .day-separator {
+            height: 10px;
+        }
+    </style>
+</head>
+<body style="background: var(--window-bg); overflow-y: auto; display: block;">
+
+    <div class="window-header" style="position: sticky; top: 0; z-index: 100;">
+        <h2 id="win-title">Розклад на тиждень</h2>
+        <a href="main.html" class="close-btn" style="text-decoration: none;">&times;</a>
+    </div>
+
+    <div class="window-body">
+        <div id="full-week-container">
+            </div>
+    </div>
+
+    <script src="core.js"></script>
+    <script>
+        function renderFullWeek() {
+            const container = document.getElementById('full-week-container');
+            
+            // Масив індексів днів (1 - Пн, 2 - Вт, 3 - Ср, 4 - Чт, 5 - Пт)
+            const days = [1, 2, 3, 4, 5];
+            
+            // Генеруємо HTML для кожного дня
+            const fullHtml = days.map(dayNum => {
+                return `
+                    <div class="week-day-block">
+                        ${renderDayUI(dayNum, false)}
+                    </div>
+                    <div class="day-separator"></div>
+                `;
+            }).join('');
+
+            container.innerHTML = fullHtml;
+        }
+
+        // Запуск при завантаженні
+        renderFullWeek();
+    </script>
+</body>
+</html>
