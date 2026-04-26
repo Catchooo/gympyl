@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Налаштування - Пилиповицька Гімназія</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background: var(--window-bg); overflow-y: auto; display: block;">
+
+    <div class="window-header" style="position: sticky; top: 0; z-index: 100;">
+        <h2>Вибір класу</h2>
+        <a href="main.html" class="close-btn" style="text-decoration: none;">&times;</a>
+    </div>
+
+    <div class="window-body">
+        <div class="settings-card">
+            <p style="text-align: center; color: #555; margin-bottom: 20px;">
+                Оберіть свій клас, щоб додаток показував правильний розклад:
+            </p>
+            
+            <div id="class-list" class="class-grid">
+                </div>
+
+            <div id="save-status" style="text-align: center; margin-top: 15px; color: #2ecc71; font-weight: bold; height: 20px;"></div>
+        </div>
+    </div>
+
+    <script src="core.js"></script>
+    <script>
+        function renderClasses() {
+            const container = document.getElementById('class-list');
+            // Отримуємо всі доступні класи з об'єкта allSchedules у core.js
+            const classes = Object.keys(allSchedules);
+            
+            container.innerHTML = classes.map(cls => `
+                <div class="class-item ${currentClass === cls ? 'selected' : ''}" onclick="saveClass('${cls}')">
+                    <span class="class-number">${cls}</span>
+                    <span class="class-label">клас</span>
+                </div>
+            `).join('');
+        }
+
+        function saveClass(cls) {
+            // Зберігаємо в пам'ять
+            localStorage.setItem('gym_currentClass', cls);
+            currentClass = cls; // Оновлюємо локальну змінну з core.js
+            
+            document.getElementById('save-status').innerText = `Готово! Вибрано ${cls} клас`;
+            
+            renderClasses();
+
+            // Повертаємо на головну через секунду
+            setTimeout(() => {
+                window.location.href = 'main.html';
+            }, 800);
+        }
+
+        // Запуск
+        renderClasses();
+    </script>
+
+    <style>
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            padding: 10px;
+        }
+        .class-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .class-item.selected {
+            border-color: #3498db;
+            background: #ebf5fb;
+            transform: scale(1.05);
+        }
+        .class-number {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .class-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+    </style>
+</body>
+</html>
