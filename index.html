@@ -9,7 +9,7 @@
     <style>
         @font-face {
             font-family: 'GOST';
-            src: url('gost.ttf') format('opentype'), /* або .ttf, перевір розширення файлу */
+            src: url('gost.ttf') format('opentype'), 
                  url('gost.woff2') format('woff2');
             font-weight: 500;
             font-style: normal;
@@ -51,10 +51,10 @@
 
         .easter-egg-67 {
             position: fixed;
-            bottom: -100%; /* Початково схована знизу */
+            bottom: -100%;
             left: 50%;
             transform: translateX(-50%);
-            width: 300px; /* Можеш змінити розмір */
+            width: 300px; 
             z-index: 9999;
             transition: bottom 1s ease-out;
             pointer-events: none;
@@ -68,7 +68,7 @@
             100% { transform: translateX(-50%) rotate(0deg); }
         }
         .easter-egg-67.active {
-            bottom: 20%; /* Випливає до середини (нижче центру) */
+            bottom: 20%; 
             animation: shake-and-slide 0.5s infinite;
         }
         
@@ -199,8 +199,8 @@
             
             .desktop-greeting h1 {
                 cursor: pointer;
-                user-select: none; /* Щоб текст не виділявся синім при швидких кліках */
-                display: inline-block; /* Щоб область кліку була тільки на буквах */
+                user-select: none;
+                display: inline-block; 
             }
 
         body.window-open .desktop-greeting {
@@ -511,16 +511,16 @@
             const schoolTitle = document.getElementById('school-name');
             
             if (schoolTitle) {
-                schoolTitle.style.pointerEvents = "auto"; // Робимо заголовок клікабельним
+                schoolTitle.style.pointerEvents = "auto"; 
                 schoolTitle.addEventListener('click', () => {
                     clickCount++;
         
         if (clickCount === 5) {
             activateEasterEgg();
-            clickCount = 0; // Скидаємо лічильник
+            clickCount = 0; 
         }
         
-        // Скидаємо лічильник, якщо людина довго не клікає (наприклад, через 2 секунди)
+        
                     setTimeout(() => { if(clickCount < 5) clickCount = 0; }, 2000);
                 });
             }
@@ -699,7 +699,7 @@
             }
         }
 
-        // --- ВЕЛИКДЕНЬ (ПАСХАЛКА) ---
+        
         let count = 0;
         let clickTimer;
 
@@ -709,7 +709,7 @@
                 count++;
                 clearTimeout(clickTimer);
                 
-                // Скидаємо лічильник, якщо пауза між кліками > 2 сек
+                
                 clickTimer = setTimeout(() => { count = 0; }, 2000);
 
                 if (count === 5) {
